@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>The Blog of Carles Cortes Costa</title>
+    <link>http://www.carles.cc/index.xml</link>
+    <description>Recent content on The Blog of Carles Cortes Costa</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 26 Feb 2017 00:00:05 +0800</lastBuildDate>
+    <atom:link href="http://www.carles.cc/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>First Post</title>
+      <link>http://www.carles.cc/post/First-Post/</link>
+      <pubDate>Sun, 26 Feb 2017 00:00:05 +0800</pubDate>
+      
+      <guid>http://www.carles.cc/post/First-Post/</guid>
+      <description>&lt;p&gt;This is the first post on my new blog &lt;strong&gt;www.carles.cc&lt;/strong&gt;. I will try to use this platform to fix some of the knowledge I generate through my work and hobbies in fields like I.T infrastructure, DevOps, CI/CD, hosting, docker, Raspberry Pi, Software Development and others.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
