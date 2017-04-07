@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Docker on Carles IT Blog</title>
+    <link>http://www.carles.cc/tags/docker/index.xml</link>
+    <description>Recent content in Docker on Carles IT Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="http://www.carles.cc/tags/docker/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Create Docker Swarm on Centos</title>
+      <link>http://www.carles.cc/2017/04/create-docker-swarm-on-centos/</link>
+      <pubDate>Fri, 07 Apr 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://www.carles.cc/2017/04/create-docker-swarm-on-centos/</guid>
+      <description>&lt;p&gt;The goal of this article is to achieve a clean installation of Docker and Docker Swarm on Centos 7.X, then we will also create our first cluster.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;To do this we start by installing Docker from the official repositories from Centos, then create a cluster with 2 Master nodes and 1 Worker node as an example and use basic docker swarm commands to check the status of our cluster.&lt;/p&gt;
+
+&lt;p&gt;Other articles will follow explaining how to create services, use a local Docker Registry, Docker compose and other related topics.&lt;/p&gt;
+
+&lt;h2 id=&#34;install-docker-using-the-docker-official-repositories&#34;&gt;Install Docker using the Docker Official Repositories&lt;/h2&gt;
+
+&lt;p&gt;To do this we can follow the official &lt;a href=&#34;https://docs.docker.com/engine/installation/linux/centos/&#34;&gt;documentation&lt;/a&gt;, but here you have what you need to do:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;Install &lt;em&gt;yum-utils&lt;/em&gt;, which provides the &lt;em&gt;yum-config-manager&lt;/em&gt; utility:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo yum install -y yum-utils
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Use yum-config-manager to install the repository:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo yum-config-manager \
+    --add-repo \
+    https://download.docker.com/linux/centos/docker-ce.repo
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Install Docker&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo yum makecache fast
+$ sudo yum install docker-ce
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;In order to check the version of docker that we have installed&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo docker version
+Client:
+ Version:      17.03.1-ce
+ API version:  1.27
+ Go version:   go1.7.5
+ Git commit:   c6d412e
+ Built:        Mon Mar 27 17:05:44 2017
+ OS/Arch:      linux/amd64
+
+Server:
+ Version:      17.03.1-ce
+ API version:  1.27 (minimum version 1.12)
+ Go version:   go1.7.5
+ Git commit:   c6d412e
+ Built:        Mon Mar 27 17:05:44 2017
+ OS/Arch:      linux/amd64
+ Experimental: false
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;On production systems is advised by the official documentation to do not always blindly update to the latest version. To list all available versions of docker existing on the repository, you can use the following command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ yum list docker-ce.x86_64  --showduplicates |sort -r
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;Enable the Docker Daemon&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo systemctl enable docker
+$ sudo systemctl start docker
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&#34;create-the-docker-swarm-cluster&#34;&gt;Create the Docker Swarm Cluster&lt;/h2&gt;
+
+&lt;h3 id=&#34;prerequisites&#34;&gt;Prerequisites&lt;/h3&gt;
+
+&lt;p&gt;The prerequisites to follow this tutorial are pretty straighforward:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Docker version &amp;gt; 1.12 (Swarm mode was introduced in this version)&lt;/li&gt;
+&lt;li&gt;The following ports must be available between members of the Cluster:
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;TCP port 2377&lt;/strong&gt; for cluster management communications&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;TCP&lt;/strong&gt; and &lt;strong&gt;UDP port 7946&lt;/strong&gt; for communication among nodes&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;UDP port 4789&lt;/strong&gt; for overlay network traffic
+&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If you are planning on creating an overlay network with encryption (&amp;ndash;opt encrypted), you will also need to ensure &lt;strong&gt;ip protocol 50 (ESP)&lt;/strong&gt; traffic is allowed.&lt;/p&gt;
+
+&lt;h3 id=&#34;create-the-swarm&#34;&gt;Create the Swarm&lt;/h3&gt;
+
+&lt;p&gt;First we will create a Manager node, this action will give us the comments used to add other nodes to the cluster.&lt;/p&gt;
+
+&lt;p&gt;First we SSH into the node we want to use as a Manager:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ ssh node1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Run the command to initialize the swarm Manager:&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;In our lab the IP of the Node that initizes the Swarm is 172.21.177.34:2377&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ docker swarm init --advertise-addr &amp;lt;MANAGER-IP&amp;gt;
+
+    Swarm initialized: current node (rt7coj28xc3hcgxu84m951w43) is now a manager.
+
+    To add a worker to this swarm, run the following command:
+
+        docker swarm join \
+        --token SWMTKN-1-4dt83pm5az465u6cp6gftcmcwi4s16n0y5qliw526oaix44l74-026n87wpf9tt2d97gcp6uc2ht \
+       172.21.177.34:2377
+
+    To add a manager to this swarm, run &#39;docker swarm join-token manager&#39; and follow the instructions.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;em&gt;&amp;ndash;advertise-addr&lt;/em&gt; flag makes the Manager publish it&amp;rsquo;s address.&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;Add a new Node to Cluster as Worker&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ docker swarm join --token SWMTKN-1-4dt83pm5az465u6cp6gftcmcwi4s16n0y5qliw526oaix44l74-026n87wpf9tt2d97gcp6uc2ht 172.21.177.34:2377
+This node joined a swarm as a worker.
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Add a new Node to the Cluster as Manager&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;This part of the official documentation is not clearly explained, the following command has to be executed in the server that was used as the master, were we initialized the Cluster, and, it is important to know that one of the Masters will act as a leader, and that the manager nodes share data using &lt;em&gt;Raft&lt;/em&gt;, so it is recommended an odd number of Master Nodes for production (3 or 5 minimum)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ docker swarm join-token manager
+    To add a manager to this swarm, run the following command:
+
+    docker swarm join \
+    --token     SWMTKN-1-4dt83pm5az465u6cp6gftcmcwi4s16n0y5qliw526oaix44l74-5t75b72i0dyna8p9quga2odzu \
+172.21.177.34:2377
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We will then execute the resulting command in the second Manager node for our example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ docker swarm join --token SWMTKN-1-4dt83pm5az465u6cp6gftcmcwi4s16n0y5qliw526oaix44l74-5t75b72i0dyna8p9quga2odzu 172.21.177.34:2377
+    This node joined a swarm as a manager.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;check-the-status-of-the-swarm&#34;&gt;Check the status of the Swarm&lt;/h3&gt;
+
+&lt;p&gt;We can use the commands &lt;em&gt;docker info&lt;/em&gt; and &lt;em&gt;docker node ls&lt;/em&gt; to check the status of the Swarm Cluster&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ docker info
+    ...
+
+
+Swarm: active
+ NodeID: wn6l2pua4mvv6m9s7laez2hc2
+ Is Manager: true
+ ClusterID: lkz7zs8vwr1lf41n2ay4bftgy
+ Managers: 2
+ Nodes: 3
+ Orchestration:
+  Task History Retention Limit: 5
+ Raft:
+  Snapshot Interval: 10000
+  Number of Old Snapshots to Retain: 0
+  Heartbeat Tick: 1
+  Election Tick: 3
+
+  ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;-&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ docker node ls
+
+    ID                           HOSTNAME                                      STATUS  AVAILABILITY  MANAGER STATUS
+    rt7coj28xc3hcgxu84m951w43    node1                                         Ready   Active        Leader
+    tjadwr4itnry5swuuhtytgrjl    node2                                         Ready   Active        
+    wn6l2pua4mvv6m9s7laez2hc2 *  node3                                         Ready   Active        Reachable
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;HUGOMORE42&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>
