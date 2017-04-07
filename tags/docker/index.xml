@@ -18,7 +18,7 @@
 
 &lt;p&gt;&lt;/p&gt;
 
-&lt;p&gt;To do this we start by installing Docker from the official repositories from Centos, then create a cluster with 2 Master nodes and 1 Worker node as an example and use basic docker swarm commands to check the status of our cluster.&lt;/p&gt;
+&lt;p&gt;To do this we start by installing Docker from the official repositories of Centos, then create a cluster with 2 Master nodes and 1 Worker node as an example and use basic docker swarm commands to check the status of our cluster.&lt;/p&gt;
 
 &lt;p&gt;Other articles will follow explaining how to create services, use a local Docker Registry, Docker compose and other related topics.&lt;/p&gt;
 
@@ -193,9 +193,7 @@ Swarm: active
     rt7coj28xc3hcgxu84m951w43    node1                                         Ready   Active        Leader
     tjadwr4itnry5swuuhtytgrjl    node2                                         Ready   Active        
     wn6l2pua4mvv6m9s7laez2hc2 *  node3                                         Ready   Active        Reachable
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;HUGOMORE42&lt;/p&gt;</description>
+&lt;/code&gt;&lt;/pre&gt;</description>
     </item>
     
   </channel>
