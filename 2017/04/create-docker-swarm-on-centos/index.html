@@ -383,10 +383,11 @@ This node joined a swarm as a worker.
 <p>This part of the official documentation is not clearly explained, the following command has to be executed in the server that was used as the master, were we initialized the Cluster, and, it is important to know that one of the Masters will act as a leader, and that the manager nodes share data using <em>Raft</em>, so it is recommended an odd number of Master Nodes for production (3 or 5 minimum)</p>
 </blockquote>
 
-<pre><code>    $ docker swarm join-token manager
-    To add a manager to this swarm, run the following command:
+<p><img src="http://www.carles.cc/img/docker-swarm-raft.jpg" alt="Docker Swarm Raft" />
+        $ docker swarm join-token manager
+        To add a manager to this swarm, run the following command:</p>
 
-    docker swarm join \
+<pre><code>    docker swarm join \
     --token     SWMTKN-1-4dt83pm5az465u6cp6gftcmcwi4s16n0y5qliw526oaix44l74-5t75b72i0dyna8p9quga2odzu \
 172.21.177.34:2377
 </code></pre>
