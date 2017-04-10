@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Portainer on Carles IT Blog</title>
+    <link>http://www.carles.cc/categories/portainer/index.xml</link>
+    <description>Recent content in Portainer on Carles IT Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="http://www.carles.cc/categories/portainer/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>Graphical Interfaces for Docker Swarm</title>
+      <link>http://www.carles.cc/2017/04/graphical-interfaces-for-docker-swarm/</link>
+      <pubDate>Mon, 10 Apr 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://www.carles.cc/2017/04/graphical-interfaces-for-docker-swarm/</guid>
+      <description>&lt;p&gt;In this article I will explore some different options for graphical interfaces to manage a Docker Swarm cluster and I will show how to install Portainer as a Swarm Service.
+&lt;/p&gt;
+
+&lt;h2 id=&#34;introduction&#34;&gt;Introduction&lt;/h2&gt;
+
+&lt;p&gt;The ecosystem of graphical interfaces for Docker is experiencing a fast grow and improvement lately, and I believe it will continue to do so for the next months.&lt;/p&gt;
+
+&lt;p&gt;In my opinion the status of the Docker ecosystem requires still to work mostly using the CLI tools, they are mature and well documented, not so much yet the GUI tools available to manage a Swarm.&lt;/p&gt;
+
+&lt;p&gt;In this article I will analyze some of them, specially &lt;a href=&#34;http://portainer.io/&#34;&gt;portainer&lt;/a&gt;, [shipyard](&amp;ldquo;&lt;a href=&#34;https://shipyard.com&amp;quot;&#34;&gt;https://shipyard.com&amp;quot;&lt;/a&gt;) and &lt;a href=&#34;http://rancher.com/&#34;&gt;rancher&lt;/a&gt;. But there are a few others, some of them interesting enough to take a further look, like [panamax](&amp;ldquo;&lt;a href=&#34;http://panamax.io&amp;quot;&#34;&gt;http://panamax.io&amp;quot;&lt;/a&gt;) or &lt;a href=&#34;&amp;quot;https://cloud.docker.com/&#34;&gt;Docker Cloud&lt;/a&gt;. Other articles with an overview of this tools and more can be found in:&lt;/p&gt;
+
+&lt;p&gt;[seven-graphical-interfaces-to-docker](&amp;ldquo;&lt;a href=&#34;https://blog.ouseful.info/2015/08/10/seven-graphical-interfaces-to-docker/&amp;quot;&#34;&gt;https://blog.ouseful.info/2015/08/10/seven-graphical-interfaces-to-docker/&amp;quot;&lt;/a&gt;)
+[7 Web Interfaces for Container Management and Orchestration](&amp;ldquo;7 Web Interfaces for Container Management and Orchestration&amp;rdquo;)&lt;/p&gt;
+
+&lt;h2 id=&#34;portainer&#34;&gt;Portainer&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://demo.portainer.io/images/logo_alt.png&#34; alt=&#34;portainer logo&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Portainer is by far the easiest one to install, it does not require a separated container for the DB, the interface  is very fast and responsive, great to have an overview of what is happening on the Cluster.&lt;/p&gt;
+
+&lt;p&gt;The product is sold as an easy way to manage Docker and Docker Swarm, but it actually has many downsides, first of all it is still not able to launch containers and apps as a Swarm Service. In general, it&amp;rsquo;s Swarm integration is still far from what it Should be to be really useful.&lt;/p&gt;
+
+&lt;p&gt;It also lacks local registry configuration and Active Directory integration, which are both very important features for our organization. There are news that they will be offering a separated module for AD integration end of the year, but it will be paid.&lt;/p&gt;
+
+&lt;p&gt;In general, I really like it&amp;rsquo;s simplicity, the interface, and I find it very useful to have a fast overview of the status of the Swarm, and also great are the possibilities to debug containers, allowing you to check the logs, access to the shell and check it&amp;rsquo;s performance graphs.&lt;/p&gt;
+
+&lt;h2 id=&#34;shipyard&#34;&gt;Shipyard&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://www.safaribooksonline.com/library/view/docker-creating-structured/9781786465931/graphics/B04203_10_01.jpg&#34; alt=&#34;Shipyard logo&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Shipyard is built to be a great UI for docker Swarm, it has support for Swarm services, local registries and AD integration.&lt;/p&gt;
+
+&lt;p&gt;The problem with Shipyard is it&amp;rsquo;s installation, and not because is difficult, they offer 2 options to install, one based on a script, called automatic, and another one manual were you have to create 6 containers for the app, which is also not complicated. The problem I find with this approach is mostly the lack of a processs to install Shipyard as a Swarm Service. I find an application with a focus on being the management portal of your Swarm Cluster, needs to have HA capabilities.&lt;/p&gt;
+
+&lt;p&gt;I don&amp;rsquo;t understand why they automatize the installation process with an script and not with a docker-compose file, I would also appreciate the possibility to change their db container (It uses RethinkDB) to some external database service, maybe MySQL, so you can achieve data persistence using services like AWS RDS or just an external database.&lt;/p&gt;
+
+&lt;p&gt;This is a complain I have actually about all the Swarm/Kubernetes tools I had examined.&lt;/p&gt;
+
+&lt;p&gt;In general Shipyard is already pretty feature rich, it&amp;rsquo;s interface is clear and responsive and I like it&amp;rsquo;s focus on providing support for Docker Swarm.&lt;/p&gt;
+
+&lt;h2 id=&#34;rancher&#34;&gt;Rancher&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://cdn.evbuc.com/eventlogos/90565841/rancherlogofinal.png&#34; alt=&#34;Rancher logo&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Rancher is a very powerful tool, well done, and the most enterprise grade of this 3 options. It has RBAC, AD integration and detailed audit logs. Also, it&amp;rsquo;s existing catalog of applications and the way you can add new ones is the best one from this 3 options.&lt;/p&gt;
+
+&lt;p&gt;It supports &lt;strong&gt;Docker Swarm&lt;/strong&gt; (Recently Added), &lt;strong&gt;Kubernetes&lt;/strong&gt; and Rancher&amp;rsquo;s own orchestration called &lt;strong&gt;Cattle&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Rancher recommendation is to install it outside the Swarm, in an independent host, I have to say this is an idea I don&amp;rsquo;t like. I like to keep the architecture as simple as possible, specially when I think about tools like AWS CloudFormation, and I don&amp;rsquo;t want to think much in how to add High Availability to a tool like this, it should come out-of-the-box, or even better, use the Swarm Cluster.&lt;/p&gt;
+
+&lt;p&gt;It also does not offer instructions to be installed as a Swarm Service, and, Docker Swarm still appears as in testing/beta state in some parts of it&amp;rsquo;s website and documentation.&lt;/p&gt;
+
+&lt;h2 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;I think the 3 tools are great, almost ready for me, but not yet. At this point I still think managing and configuring your local registries, compose files and in some cases the scripts with API calls is better done through &lt;strong&gt;CLI&lt;/strong&gt; than trying to use web interfaces.&lt;/p&gt;
+
+&lt;p&gt;For sure I will give this tools a new oportunity in the near future, because I am sure they will continue improving at a fast pace and is probable that in my organization we end using one of them to administer our Swarm, just, not yet.&lt;/p&gt;
+
+&lt;p&gt;I don&amp;rsquo;t understand why there is not a clear and fast way to configure persistent storage with an external database, is something I do often on some of the Docker Files I wrote, and for me it is a pretty elegant solucion to have a Service Running in the Swarm with High Availability.&lt;/p&gt;
+
+&lt;p&gt;I am pretty sure many readers of this article will disagree with me, or maybe point me in the right direction. I welcome any different point of view in the comments.&lt;/p&gt;
+
+&lt;p&gt;Nevertheless, I will install &lt;strong&gt;Portainer&lt;/strong&gt; as a service in my Docker Swarm, while I will not use it for management tasks, it is still a great tool to get a graphical overview of the Cluster and also to debug problems with single containers.&lt;/p&gt;
+
+&lt;h2 id=&#34;installing-portainer-as-a-swarm-service&#34;&gt;Installing Portainer as a Swarm Service&lt;/h2&gt;
+
+&lt;p&gt;The official instructions to install &lt;strong&gt;Portainer&lt;/strong&gt; have recently included a way to install it as a Swarm Service, while I like more this solution than to have it without HA. It is worth mentioning that since there&amp;rsquo;s no way to point portainer to an external storage for configuration, every time the service switches from host to host, the admin credentials will have to be reconfigured, and all configurations, if any, done inside the Portainer interface lost.&lt;/p&gt;
+
+&lt;p&gt;To install and start Portainer as a Swarm Service connect to a &lt;strong&gt;Manager Node&lt;/strong&gt; and run the following command:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;docker service create     --name portainer     --publish 9000:9000     --constraint &#39;node.role == manager&#39;     --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock     portainer/portainer     -H unix:///var/run/docker.sock&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;This will create a Service called &lt;em&gt;portainer&lt;/em&gt;, publish is internal 9000 port to the outside, and limit the Nodes it can run to Manager Nodes, this is because only the Manager Nodes can give and overview of the state of the Swarm and do changes on it.&lt;/p&gt;
+
+&lt;p&gt;After that we can already connect to it, by using the IP of any of the Nodes (Mesh Networking on Swarm) and the port 9000.
+&lt;img src=&#34;http://www.carles.cc/img/portainer.png&#34; alt=&#34;Portainer Log-in&#34; /&gt;&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>
