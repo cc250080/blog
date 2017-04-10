@@ -261,14 +261,15 @@
 
 <h2 id="introduction">Introduction</h2>
 
-<p>The ecosystem of graphical interfaces for Docker is experiencing a fast grow and improvement lately, and I believe it will continue to do so for the next months.</p>
+<p>The ecosystem of graphical interfaces for Docker is experiencing a fast grow and improvement lately, and I believe it will continue to do so for the next years.</p>
 
 <p>In my opinion the status of the Docker ecosystem requires still to work mostly using the CLI tools, they are mature and well documented, not so much yet the GUI tools available to manage a Swarm.</p>
 
-<p>In this article I will analyze some of them, specially <a href="http://portainer.io/">portainer</a>, [shipyard](&ldquo;<a href="https://shipyard.com&quot;">https://shipyard.com&quot;</a>) and <a href="http://rancher.com/">rancher</a>. But there are a few others, some of them interesting enough to take a further look, like [panamax](&ldquo;<a href="http://panamax.io&quot;">http://panamax.io&quot;</a>) or <a href="&quot;https://cloud.docker.com/">Docker Cloud</a>. Other articles with an overview of this tools and more can be found in:</p>
+<p>In this article I will analyze some of them, specially <a href="http://portainer.io/">portainer</a>, <a href="https://shipyard.com">shipyard</a> and <a href="http://rancher.com/">rancher</a>. But there are a few others, some of them interesting enough to take a further look, like <a href="http://panamax.io">panamax</a> or <a href="https://cloud.docker.com/">Docker Cloud</a>. Other articles with an overview of this tools and more can be found in:</p>
 
-<p>[seven-graphical-interfaces-to-docker](&ldquo;<a href="https://blog.ouseful.info/2015/08/10/seven-graphical-interfaces-to-docker/&quot;">https://blog.ouseful.info/2015/08/10/seven-graphical-interfaces-to-docker/&quot;</a>)
-[7 Web Interfaces for Container Management and Orchestration](&ldquo;7 Web Interfaces for Container Management and Orchestration&rdquo;)</p>
+<p><a href="https://blog.ouseful.info/2015/08/10/seven-graphical-interfaces-to-docker/">seven-graphical-interfaces-to-docker</a></p>
+
+<p><a href="7 Web Interfaces for Container Management and Orchestration">7 Web Interfaces for Container Management and Orchestration</a></p>
 
 <h2 id="portainer">Portainer</h2>
 
@@ -288,7 +289,7 @@
 
 <p>Shipyard is built to be a great UI for docker Swarm, it has support for Swarm services, local registries and AD integration.</p>
 
-<p>The problem with Shipyard is it&rsquo;s installation, and not because is difficult, they offer 2 options to install, one based on a script, called automatic, and another one manual were you have to create 6 containers for the app, which is also not complicated. The problem I find with this approach is mostly the lack of a processs to install Shipyard as a Swarm Service. I find an application with a focus on being the management portal of your Swarm Cluster, needs to have HA capabilities.</p>
+<p>The problem with Shipyard is it&rsquo;s installation, and not because is difficult, they offer 2 options to install, one based on a script, called automatic, and another one manual were you have to create 6 containers for the app, which is also not complicated. The problem I find with this approach is mostly the lack of a processs to install Shipyard as a Swarm Service. I find an application with a focus on being the management portal of your Swarm Cluster needs to have HA capabilities.</p>
 
 <p>I don&rsquo;t understand why they automatize the installation process with an script and not with a docker-compose file, I would also appreciate the possibility to change their db container (It uses RethinkDB) to some external database service, maybe MySQL, so you can achieve data persistence using services like AWS RDS or just an external database.</p>
 
@@ -322,7 +323,7 @@
 
 <h2 id="installing-portainer-as-a-swarm-service">Installing Portainer as a Swarm Service</h2>
 
-<p>The official instructions to install <strong>Portainer</strong> have recently included a way to install it as a Swarm Service, while I like more this solution than to have it without HA. It is worth mentioning that since there&rsquo;s no way to point portainer to an external storage for configuration, every time the service switches from host to host, the admin credentials will have to be reconfigured, and all configurations, if any, done inside the Portainer interface lost.</p>
+<p>The official instructions to install <strong>Portainer</strong> have recently included a way to install it as a Swarm Service, while I like more this solution than to have it without HA, It is worth mentioning that since there&rsquo;s no way to point portainer to an external storage for configuration, every time the service switches from host to host, the admin credentials will have to be reconfigured, and all configurations, if any, done inside the Portainer interface will be lost.</p>
 
 <p>To install and start Portainer as a Swarm Service connect to a <strong>Manager Node</strong> and run the following command:</p>
 
