@@ -26,7 +26,7 @@
     only supported with experimental daemon
 &lt;/code&gt;&lt;/pre&gt;
 
-&lt;p&gt;##How to enable Docker Daemon experimental features&lt;/p&gt;
+&lt;h2 id=&#34;how-to-enable-docker-daemon-experimental-features&#34;&gt;How to enable Docker Daemon experimental features&lt;/h2&gt;
 
 &lt;p&gt;You can follow the official documentation &lt;a href=&#34;https://github.com/docker/docker/tree/master/experimental&#34;&gt;here&lt;/a&gt; , but I will briefly explain the necessary steps.&lt;/p&gt;
 
