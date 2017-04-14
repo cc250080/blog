@@ -17,8 +17,6 @@
       <description>&lt;p&gt;The current stable version of Docker Swarm has an important feature missing, and is the same control over logs available without orchestratrion.
 &lt;/p&gt;
 
-&lt;p&gt;#DEBUG DOCKER SERVICE LOGS&lt;/p&gt;
-
 &lt;p&gt;It can be really painful to &lt;strong&gt;debug&lt;/strong&gt; a &lt;code&gt;docker swarm create&lt;/code&gt; command that ends in a &lt;code&gt;&amp;quot;task: non-zero exit (1)&amp;quot;&lt;/code&gt; kind of error.&lt;/p&gt;
 
 &lt;p&gt;But, the docker team is working in a solution, they started developing it when Docker Swarm Mode appeared, and it is already available as an &lt;em&gt;experimental feature&lt;/em&gt;, so in this article I will explain how to enable experimental features on Docker Swarm and how to use the new &lt;code&gt;docker service log&lt;/code&gt; command.&lt;/p&gt;
