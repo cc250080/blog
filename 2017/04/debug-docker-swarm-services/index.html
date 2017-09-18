@@ -1,0 +1,753 @@
+
+
+  
+    
+  
+
+
+  
+
+
+
+
+  
+
+
+  
+
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="Hugo 0.19">
+    <title>Debug Docker Swarm Services</title>
+    <meta name="author" content="Carles Cortes Costa">
+    <meta name="keywords" content="Docker, DevOps, Docker Swarm, Swarm, Debug, Logs, Create, Experimental, CI/CD, Docker, DevOps, Jenkins, Linux, Open Source, development, next-gen">
+
+    <link rel="icon" href="http://www.carles.cc/favicon.png">
+    
+
+    
+    <meta name="description" content="The current stable version of Docker Swarm has an important feature missing, and is the same control over logs available without orchestratrion.
+">
+    <meta property="og:description" content="The current stable version of Docker Swarm has an important feature missing, and is the same control over logs available without orchestratrion.
+">
+    <meta property="og:type" content="blog">
+    <meta property="og:title" content="Debug Docker Swarm Services">
+    <meta property="og:url" content="/2017/04/debug-docker-swarm-services/">
+    <meta property="og:site_name" content="Carles IT Blog">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Carles IT Blog">
+    <meta name="twitter:description" content="The current stable version of Docker Swarm has an important feature missing, and is the same control over logs available without orchestratrion.
+">
+    
+    
+
+    
+    
+
+    
+      <meta property="og:image" content="//www.gravatar.com/avatar/598c6e3a97498cb3bba12f06e557c91d?s=640">
+    
+
+    
+      <meta property="og:image" content="//www.kodelog.com/wp-content/uploads/2015/06/debug.jpg">
+    
+    
+      <meta property="og:image" content="//www.kodelog.com/wp-content/uploads/2015/06/debug.jpg">
+    
+    
+
+    
+
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.4/jquery.fancybox.css" />
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.4/helpers/jquery.fancybox-thumbs.min.css" />
+    
+    
+    <link rel="stylesheet" href="http://www.carles.cc/css/style-gwlo24d2hxipxk8bi1sxik0zhlpn9t7ebcmgp9kubmmcjfzlavuyhvbqumhn.min.css" />
+    
+    
+
+    
+      
+    
+    
+  </head>
+
+  <body>
+    <div id="blog">
+      <header id="header" data-behavior="4">
+  <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+  <div class="header-title">
+    <a class="header-title-link" href="http://www.carles.cc/">Carles IT Blog</a>
+  </div>
+  
+    
+      <a class="header-right-picture "
+         href="http://www.carles.cc/#about">
+    
+    
+    
+      
+        <img class="header-picture" src="//www.gravatar.com/avatar/598c6e3a97498cb3bba12f06e557c91d?s=90" alt="Author&#39;s picture" />
+      
+    
+    </a>
+  
+</header>
+
+      <nav id="sidebar" data-behavior="4">
+  <div class="sidebar-container">
+    
+      <div class="sidebar-profile">
+        <a href="http://www.carles.cc/#about">
+          <img class="sidebar-profile-picture" src="//www.gravatar.com/avatar/598c6e3a97498cb3bba12f06e557c91d?s=110" alt="Author&#39;s picture" />
+        </a>
+        <h4 class="sidebar-profile-name">Carles Cortes Costa</h4>
+        
+          <h5 class="sidebar-profile-bio">SysAdmin/DevOps/<strong>Nerd</strong></h5>
+        
+      </div>
+    
+    <ul class="sidebar-buttons">
+      
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="http://www.carles.cc/categories">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-bookmark"></i>
+      
+      <span class="sidebar-button-desc">Categories</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="http://www.carles.cc/tags">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-tags"></i>
+      
+      <span class="sidebar-button-desc">Tags</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="http://www.carles.cc/archives">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-archive"></i>
+      
+      <span class="sidebar-button-desc">Archives</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="http://www.carles.cc/#about">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-question"></i>
+      
+      <span class="sidebar-button-desc">About</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="http://www.carles.cc/">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-home"></i>
+      
+      <span class="sidebar-button-desc">Home</span>
+    </a>
+  </li>
+
+    </ul>
+    <ul class="sidebar-buttons">
+      
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://github.com/cc250080" target="_blank">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-github"></i>
+      
+      <span class="sidebar-button-desc">GitHub</span>
+    </a>
+  </li>
+
+    </ul>
+    <ul class="sidebar-buttons">
+      
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="http://www.carles.cc/index.xml">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-rss"></i>
+      
+      <span class="sidebar-button-desc">RSS</span>
+    </a>
+  </li>
+
+    </ul>
+  </div>
+</nav>
+
+      
+  <div class="post-header-cover
+              text-center
+              post-header-cover--partial"
+       style="background-image:url('//www.kodelog.com/wp-content/uploads/2015/06/debug.jpg')"
+       data-behavior="4">
+    
+  </div>
+
+
+      <div id="main" data-behavior="4"
+        class="hasCover
+               hasCoverMetaOut
+               hasCoverCaption">
+        <article class="post" itemscope itemType="http://schema.org/BlogPosting">
+          
+            <span class="post-header-cover-caption caption">The art of solving problems</span>
+          
+          
+            <div class="post-header main-content-wrap text-center">
+  
+    <h1 class="post-title" itemprop="headline">
+      Debug Docker Swarm Services
+    </h1>
+  
+  <div class="postShorten-meta post-meta">
+  
+    <time itemprop="datePublished" datetime="2017-04-14T00:00:00Z">
+      
+  April 14, 2017
+
+    </time>
+  
+  
+  
+  
+    <span>in</span>
+    
+      <a class="category-link" href="http://www.carles.cc/categories/devops">DevOps</a>, 
+    
+      <a class="category-link" href="http://www.carles.cc/categories/docker">Docker</a>, 
+    
+      <a class="category-link" href="http://www.carles.cc/categories/docker-swarm">Docker Swarm</a>
+    
+  
+
+
+</div>
+
+</div>
+          
+          <div class="post-content markdown" itemprop="articleBody">
+            <div class="main-content-wrap">
+              <p>The current stable version of Docker Swarm has an important feature missing, and is the same control over logs available without orchestratrion.
+</p>
+
+<p>It can be really painful to <strong>debug</strong> a <code>docker swarm create</code> command that ends in a <code>&quot;task: non-zero exit (1)&quot;</code> kind of error.</p>
+
+<p>But, the docker team is working in a solution, they started developing it when Docker Swarm Mode appeared, and it is already available as an <em>experimental feature</em>, so in this article I will explain how to enable experimental features on Docker Swarm and how to use the new <code>docker service log</code> command.</p>
+
+<pre><code>    $docker service logs px8fv06fft8s
+    only supported with experimental daemon
+</code></pre>
+
+<h2 id="how-to-enable-docker-daemon-experimental-features">How to enable Docker Daemon experimental features</h2>
+
+<p>You can follow the official documentation <a href="https://github.com/docker/docker/tree/master/experimental">here</a> , but I will briefly explain the necessary steps.</p>
+
+<ol>
+<li><p>Create the file <strong>/etc/docker/daemon.json</strong> with the following content:</p>
+
+<pre><code>{    
+&quot;experimental&quot;: true
+}
+</code></pre>
+
+<ol>
+<li>Restart the docker daemon
+<br /></li>
+</ol></li>
+</ol>
+
+<p><code>systemctl restart docker</code></p>
+
+<ol>
+<li><p>Test if the experimental features are enabled:</p>
+
+<pre><code>docker version -f '{{.Server.Experimental}}'
+
+true
+</code></pre></li>
+</ol>
+
+<p><code>docker service logs</code> is not the only experimental feature being backed for Docker Swarm, there are other very interesting ones like Metrics for <strong>Prometheus</strong> for basic container, image, and daemon operations.</p>
+
+<h2 id="using-docker-service-logs">Using Docker Service Logs</h2>
+
+<p>This new feature is very straightforward in it&rsquo;s use, specially if you are familiarized with debuging problems using logs on non orchestrated docker installations (without the swarm).</p>
+
+<p>After any <code>docker service create ...</code> an <strong>ID</strong> for this service is shown:</p>
+
+<pre><code>    $docker service create --name jenkins -p 8082:8080 -p 50000:50000 -e JENKINS_OPTS=&quot;--prefix=/jenkins&quot; --mount &quot;type=bind,source=/mnt/swarm-nfs/jenkins-fg,target=/var/jenkins_home&quot; --reserve-memory 300m jenkins
+
+    v6oq1shzs51fw6q8d2bstkd2f
+</code></pre>
+
+<p>So in this example we had created a service to run <strong>Jenkins</strong>, this service is using <strong>NFS</strong> for data persistance, and after the command is executed we obtain the <strong>ID</strong> of the service, that in this case is <code>v6oq1shzs51fw6q8d2bstkd2f</code></p>
+
+<p>To check the status of the service, you can use the <code>docker service ps</code> command</p>
+
+<pre><code>    $docker service ps jenkins
+
+    ID            NAME              IMAGE           NODE                                          DESIRED STATE  CURRENT STATE                  ERROR                      PORTS
+    j33856j3oxt1  jenkins-fg.1      jenkins:latest  mc-swarm-app-place01-live.mcon-group.systems  Ready          Ready 2 seconds ago                                       
+    aaig0ummuhnq   \_ jenkins-fg.1  jenkins:latest  mc-swarm-app-place03-live.mcon-group.systems  Shutdown       Failed less than a second ago  &quot;task: non-zero exit (1)&quot;  
+    fqsp16ixgft3   \_ jenkins-fg.1  jenkins:latest  mc-swarm-app-place01-live.mcon-group.systems  Shutdown       Failed 10 seconds ago          &quot;task: non-zero exit (1)&quot;  
+    kn9c09vy06x1   \_ jenkins-fg.1  jenkins:latest  mc-swarm-app-place02-live.mcon-group.systems  Shutdown       Failed 11 seconds ago          &quot;task: non-zero exit (1)&quot;  
+    t48zk8hmn2ga   \_ jenkins-fg.1  jenkins:latest  mc-swarm-app-place03-live.mcon-group.systems  Shutdown       Failed 18 seconds ago          &quot;task: non-zero exit (1)&quot;  
+</code></pre>
+
+<p>Here we can see the run process for the container failed to succeed, we also are informed in which member of the swarm the container was trying to start, but we don&rsquo;t get any information of why this error happened.</p>
+
+<p>So to find out, we check the logs of the starting process:</p>
+
+<pre><code>    $docker service logs j4kawvh4b41h
+    jenkins-fg.1.r7qd0204i7sz@mc-swarm-app-place01-live.mcon-group.systems    | touch: cannot touch ‘/var/jenkins_home/copy_reference_file.log’: Permission denied
+    jenkins-fg.1.60jtwoggnm0q@mc-swarm-app-place03-live.mcon-group.systems    | touch: cannot touch ‘/var/jenkins_home/copy_reference_file.log’: Permission denied
+    jenkins-fg.1.kkvqtiyek4wq@mc-swarm-app-place01-live.mcon-group.systems    | touch: cannot touch ‘/var/jenkins_home/copy_reference_file.log’: Permission denied
+    jenkins-fg.1.r7qd0204i7sz@mc-swarm-app-place01-live.mcon-group.systems    | Can not write to /var/jenkins_home/copy_reference_file.log. Wrong volume permissions?
+    jenkins-fg.1.kkvqtiyek4wq@mc-swarm-app-place01-live.mcon-group.systems    | Can not write to /var/jenkins_home/copy_reference_file.log. Wrong volume permissions?
+</code></pre>
+
+<p>The logs clearly show that the problem on this example was wrong permissions on a folder that was mounted during the service creation using an NFS filesystem, problem that we can easily solve using <code>chmod</code> or mapping on NFS.</p>
+              
+            </div>
+          </div>
+          <div id="post-footer" class="post-footer main-content-wrap">
+            
+              
+                
+                
+                  <div class="post-footer-tags">
+                    <span class="text-color-light text-small">TAGGED IN</span><br/>
+                    
+  <a class="tag tag--primary tag--small" href="http://www.carles.cc/tags/docker/">Docker</a>
+
+  <a class="tag tag--primary tag--small" href="http://www.carles.cc/tags/docker-swarm/">Docker Swarm</a>
+
+                  </div>
+                
+              
+            
+            <div class="post-actions-wrap">
+  <nav>
+    <ul class="post-actions post-action-nav">
+      
+        <li class="post-action">
+          
+            <a class="post-action-btn btn btn--default tooltip--top" href="http://www.carles.cc/2017/04/ha-private-registry-with-s3-and-nfs/" data-tooltip="HA Private Registry with S3 and NFS">
+          
+            <i class="fa fa-angle-left"></i>
+            <span class="hide-xs hide-sm text-small icon-ml">NEXT</span>
+          </a>
+        </li>
+        <li class="post-action">
+          
+            <a class="post-action-btn btn btn--default tooltip--top" href="http://www.carles.cc/2017/04/graphical-interfaces-for-docker-swarm/" data-tooltip="Graphical Interfaces for Docker Swarm">
+          
+            <span class="hide-xs hide-sm text-small icon-mr">PREVIOUS</span>
+            <i class="fa fa-angle-right"></i>
+          </a>
+        </li>
+      
+    </ul>
+  </nav>
+  <ul class="post-actions post-action-share">
+    
+      <li class="post-action hide-lg hide-md hide-sm">
+        <a class="post-action-btn btn btn--default btn-open-shareoptions" href="#btn-open-shareoptions">
+          <i class="fa fa-share-alt"></i>
+        </a>
+      </li>
+      <li class="post-action hide-xs">
+        <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fdebug-docker-swarm-services%2f">
+          <i class="fa fa-google-plus"></i>
+        </a>
+      </li>
+      <li class="post-action hide-xs">
+        <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fdebug-docker-swarm-services%2f">
+          <i class="fa fa-facebook-official"></i>
+        </a>
+      </li>
+      <li class="post-action hide-xs">
+        <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fdebug-docker-swarm-services%2f">
+          <i class="fa fa-twitter"></i>
+        </a>
+      </li>
+    
+    
+      <li class="post-action">
+        <a class="post-action-btn btn btn--default" href="#disqus_thread">
+          <i class="fa fa-comment-o"></i>
+        </a>
+      </li>
+    
+    <li class="post-action">
+      
+        <a class="post-action-btn btn btn--default" href="#">
+      
+        <i class="fa fa-list"></i>
+      </a>
+    </li>
+  </ul>
+</div>
+
+
+            
+              
+                <div id="disqus_thread">
+  <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+              
+            
+          </div>
+        </article>
+        <footer id="footer" class="main-content-wrap">
+  <span class="copyrights">
+    &copy; 2017 Carles Cortes Costa. All Rights Reserved
+  </span>
+</footer>
+
+      </div>
+      <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+        <div class="post-actions-wrap">
+  <nav>
+    <ul class="post-actions post-action-nav">
+      
+        <li class="post-action">
+          
+            <a class="post-action-btn btn btn--default tooltip--top" href="http://www.carles.cc/2017/04/ha-private-registry-with-s3-and-nfs/" data-tooltip="HA Private Registry with S3 and NFS">
+          
+            <i class="fa fa-angle-left"></i>
+            <span class="hide-xs hide-sm text-small icon-ml">NEXT</span>
+          </a>
+        </li>
+        <li class="post-action">
+          
+            <a class="post-action-btn btn btn--default tooltip--top" href="http://www.carles.cc/2017/04/graphical-interfaces-for-docker-swarm/" data-tooltip="Graphical Interfaces for Docker Swarm">
+          
+            <span class="hide-xs hide-sm text-small icon-mr">PREVIOUS</span>
+            <i class="fa fa-angle-right"></i>
+          </a>
+        </li>
+      
+    </ul>
+  </nav>
+  <ul class="post-actions post-action-share">
+    
+      <li class="post-action hide-lg hide-md hide-sm">
+        <a class="post-action-btn btn btn--default btn-open-shareoptions" href="#btn-open-shareoptions">
+          <i class="fa fa-share-alt"></i>
+        </a>
+      </li>
+      <li class="post-action hide-xs">
+        <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fdebug-docker-swarm-services%2f">
+          <i class="fa fa-google-plus"></i>
+        </a>
+      </li>
+      <li class="post-action hide-xs">
+        <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fdebug-docker-swarm-services%2f">
+          <i class="fa fa-facebook-official"></i>
+        </a>
+      </li>
+      <li class="post-action hide-xs">
+        <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fdebug-docker-swarm-services%2f">
+          <i class="fa fa-twitter"></i>
+        </a>
+      </li>
+    
+    
+      <li class="post-action">
+        <a class="post-action-btn btn btn--default" href="#disqus_thread">
+          <i class="fa fa-comment-o"></i>
+        </a>
+      </li>
+    
+    <li class="post-action">
+      
+        <a class="post-action-btn btn btn--default" href="#">
+      
+        <i class="fa fa-list"></i>
+      </a>
+    </li>
+  </ul>
+</div>
+
+
+      </div>
+      <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+  <ul class="share-options">
+    <li class="share-option">
+      <a class="share-option-btn" target="new" href="https://plus.google.com/share?url=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fdebug-docker-swarm-services%2f">
+        <i class="fa fa-google-plus"></i><span>Share on Google Plus</span>
+      </a>
+    </li>
+    <li class="share-option">
+      <a class="share-option-btn" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fdebug-docker-swarm-services%2f">
+        <i class="fa fa-facebook-official"></i><span>Share on Facebook</span>
+      </a>
+    </li>
+    <li class="share-option">
+      <a class="share-option-btn" target="new" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fdebug-docker-swarm-services%2f">
+        <i class="fa fa-twitter"></i><span>Share on Twitter</span>
+      </a>
+    </li>
+  </ul>
+</div>
+<div id="share-options-mask" class="share-options-mask"></div>
+    </div>
+    
+    <div id="about">
+  <div id="about-card">
+    <div id="about-btn-close">
+      <i class="fa fa-remove"></i>
+    </div>
+    
+      <img id="about-card-picture" src="//www.gravatar.com/avatar/598c6e3a97498cb3bba12f06e557c91d?s=110" alt="Author&#39;s picture" />
+    
+    <h4 id="about-card-name">Carles Cortes Costa</h4>
+    
+      <div id="about-card-bio">SysAdmin/DevOps/<strong>Nerd</strong></div>
+    
+    
+      <div id="about-card-job">
+        <i class="fa fa-briefcase"></i>
+        <br/>
+        MCON Group Associate Director
+      </div>
+    
+    
+      <div id="about-card-location">
+        <i class="fa fa-map-marker"></i>
+        <br/>
+        Beijing
+      </div>
+    
+  </div>
+</div>
+
+    <div id="algolia-search-modal" class="modal-container">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="close-button"><i class="fa fa-close"></i></span>
+      <a href="https://algolia.com" target="_blank" class="searchby-algolia text-color-light link-unstyled">
+        <span class="searchby-algolia-text text-color-light text-small">by</span>
+        <img class="searchby-algolia-logo" src="https://www.algolia.com/static_assets/images/press/downloads/algolia-light.svg">
+      </a>
+      <i class="search-icon fa fa-search"></i>
+      <form id="algolia-search-form">
+        <input type="text" id="algolia-search-input" name="search"
+          class="form-control input--large search-input" placeholder="Search" />
+      </form>
+    </div>
+    <div class="modal-body">
+      <div class="no-result text-color-light text-center">no post found</div>
+      <div class="results">
+        
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="http://www.carles.cc/2017/04/ha-private-registry-with-s3-and-nfs/">
+                <h3 class="media-heading">HA Private Registry with S3 and NFS</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Apr 4, 2017
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>Stateless is used as a solution for everything nowadays: scale, containerize, make fault tolerant&hellip; But it is a reality that not everything can be stateless, even if you store the configurations inside the containers, you need to store static files somewhere, you need databases that are stateful by definition, and not all the tools that you will be using are created to be stateless.
+</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="http://www.carles.cc/2017/04/debug-docker-swarm-services/">
+                <h3 class="media-heading">Debug Docker Swarm Services</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Apr 4, 2017
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>The current stable version of Docker Swarm has an important feature missing, and is the same control over logs available without orchestratrion.
+</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="http://www.carles.cc/2017/04/graphical-interfaces-for-docker-swarm/">
+                <h3 class="media-heading">Graphical Interfaces for Docker Swarm</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Apr 4, 2017
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>In this article I will explore some different options for graphical interfaces to manage a Docker Swarm cluster and I will show how to install Portainer as a Swarm Service.
+</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="http://www.carles.cc/2017/04/create-docker-swarm-on-centos/">
+                <h3 class="media-heading">Create Docker Swarm on Centos</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Apr 4, 2017
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>The goal of this article is to achieve a clean installation of Docker and Docker Swarm on Centos 7.X, then we will also create our first cluster.</p>
+
+<p></p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="http://www.carles.cc/2017/02/first-post/">
+                <h3 class="media-heading">First Post</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Feb 2, 2017
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather">This is the first post on my new blog www.carles.cc. I will try to use this platform to fix some of the knowledge I generate through my work and hobbies in fields like I.T infrastructure, DevOps, CI/CD, hosting, docker, Raspberry Pi, Software Development and others.</div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="http://www.carles.cc/post/">
+                <h3 class="media-heading">Posts</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Apr 4, 2017
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+      </div>
+    </div>
+    <div class="modal-footer">
+      <p class="results-count text-medium"
+         data-message-zero="no post found"
+         data-message-one="1 post found"
+         data-message-other="{n} posts found">
+         6 posts found
+      </p>
+    </div>
+  </div>
+</div>
+    
+  
+    
+    <div id="cover" style="background-image:url('http://www.carles.cc/images/cover.jpg');"></div>
+  
+
+
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.8.0/highlight.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.4/jquery.fancybox.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.4/helpers/jquery.fancybox-thumbs.min.js"></script>
+
+
+<script src="http://www.carles.cc/js/script-wl33z0n6ocaypepiqrazthtivfrliqijej4rq8ek8gvrv1awftmgjuv8k4zc.min.js"></script>
+
+<script>
+$(document).ready(function() {
+  hljs.configure({ classPrefix: '', useBR: false });
+  $('pre.code-highlight').each(function(i, block) {
+    var code = "";
+    hljs.highlightAuto(block.innerText).value.split(/\r\n|\r|\n/).forEach(function(line) {
+      code += "<span class=\"line\">" + line + "</span><br>";
+    });
+    if (code.length > 0) {
+      block.innerHTML = code;  
+    }
+  });
+  $('pre > code').each(function(i, block) {
+    $(this).addClass('codeblock');
+    hljs.highlightBlock(block);
+  });
+});
+</script>
+
+  
+    
+      <script>
+        var disqus_config = function () {
+          this.page.url = 'http:\/\/www.carles.cc\/2017\/04\/debug-docker-swarm-services\/';
+          
+            this.page.identifier = 'pileus';
+          
+        };
+        (function() {
+          
+          
+          if (window.location.hostname == "localhost") {
+            return;
+          }
+          var d = document, s = d.createElement('script');
+          var disqus_shortname = 'pileus';
+          s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+          s.setAttribute('data-timestamp', +new Date());
+          (d.head || d.body).appendChild(s);
+        })();
+      </script>
+    
+  
+
+
+
+
+
+    
+  </body>
+</html>
+

@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Carles IT Blog</title>
+    <link>http://www.carles.cc/index.xml</link>
+    <description>Recent content on Carles IT Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 18 Apr 2017 00:00:00 +0000</lastBuildDate>
+    <atom:link href="http://www.carles.cc/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>HA Private Registry with S3 and NFS</title>
+      <link>http://www.carles.cc/2017/04/ha-private-registry-with-s3-and-nfs/</link>
+      <pubDate>Tue, 18 Apr 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://www.carles.cc/2017/04/ha-private-registry-with-s3-and-nfs/</guid>
+      <description>&lt;p&gt;Stateless is used as a solution for everything nowadays: scale, containerize, make fault tolerant&amp;hellip; But it is a reality that not everything can be stateless, even if you store the configurations inside the containers, you need to store static files somewhere, you need databases that are stateful by definition, and not all the tools that you will be using are created to be stateless.
+&lt;/p&gt;
+
+&lt;p&gt;So at one point or another, it is necessary to also have solutions in place in order to run statefull applications. In this article I will descrive the 2 solutions that can fulfill this requirements, NFS/&lt;a href=&#34;https://aws.amazon.com/efs/&#34; title=&#34;AWS Elastic File System&#34;&gt;EFS&lt;/a&gt; and &lt;a href=&#34;https://minio.io&#34; title=&#34;Distributed Object Storage&#34;&gt;Minio&lt;/a&gt;/&lt;a href=&#34;https://aws.amazon.com/s3&#34; title=&#34;AWS Simple Storage Service&#34;&gt;S3&lt;/a&gt;, and use them to create a Docker Local Registry and a Jenkins running on a Swarm cluster.&lt;/p&gt;
+
+&lt;p&gt;The tools I am choosing allow you to create cloud infrastructure, which is the right way to go, but not limiting where you can deploy it, the idea is to become cloud provider agnostic.&lt;/p&gt;
+
+&lt;h2 id=&#34;nfs-and-efs&#34;&gt;NFS and EFS&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://aws.amazon.com/efs/&#34; title=&#34;AWS Elastic File System&#34;&gt;EFS&lt;/a&gt;  is a quite new storage solution on AWS, it uses standard NFSv4 protocol but adding automatic scalability and different options to fine tune IOPS and lantencies, another great feature is multiAZ configurations. On this example I will be using an NFS server installed locally in our office lab, either using traditional NFS servers or  &lt;a href=&#34;https://aws.amazon.com/efs/&#34; title=&#34;AWS Elastic File System&#34;&gt;EFS&lt;/a&gt; is transparent for docker swarm, is done the same way.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s take a look at the example I used in my previous article, create a &lt;strong&gt;Swarm Service&lt;/strong&gt; for jenkins:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    docker service create --name jenkins-fg -p 8082:8080 -p 50000:50000 -e JENKINS_OPTS=&amp;quot;--prefix=/jenkins&amp;quot; --mount &amp;quot;type=bind,source=/mnt/swarm-nfs/jenkins-fg,target=/var/jenkins_home&amp;quot; --reserve-memory 300m jenkins
+
+    v6oq1shzs51fw6q8d2bstkd2f
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What&amp;rsquo;s special in this command is the &lt;code&gt;--mount&lt;/code&gt; option, against the more traditional &lt;strong&gt;docker volume&lt;/strong&gt; &lt;code&gt;-v&lt;/code&gt;. You can read the official Docker documentation on how to configure &lt;a href=&#34;https://docs.docker.com/engine/swarm/services/#configure-mounts&#34;&gt;mounts&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Obviously the same NFS mount should be configured in all the nodes of your Swarm, this will allow for the containers to start in any of the different nodes without any data or configuration lost.&lt;/p&gt;
+
+&lt;h2 id=&#34;minio-io-and-s3&#34;&gt;Minio.io and S3&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://minio.io&#34; title=&#34;Distributed Object Storage&#34;&gt;Minio&lt;/a&gt; is a distributed object storage server built for cloud applications and DevOps. It allow us to self host &lt;a href=&#34;https://aws.amazon.com/s3&#34; title=&#34;AWS Simple Storage Service&#34;&gt;S3&lt;/a&gt;, that we will be using when installing the local &lt;strong&gt;Docker Service Registry&lt;/strong&gt;. In this way the private registry will be able to have persistent data for the Docker Images and if necessary we can even synchronize S3 buckets between on-premises infrastructure and the AWS cloud.&lt;/p&gt;
+
+&lt;h3 id=&#34;installing-minio&#34;&gt;Installing Minio&lt;/h3&gt;
+
+&lt;p&gt;To install &lt;a href=&#34;https://minio.io&#34; title=&#34;Distributed Object Storage&#34;&gt;Minio&lt;/a&gt; as a Swarm Service we can create a Docker Compose file, in this file we will be also using NFS as a mount.&lt;/p&gt;
+
+&lt;p&gt;On the official Minio &lt;a href=&#34;https://docs.minio.io/docs/deploy-minio-on-docker-swarm&#34;&gt;documentation&lt;/a&gt; to deploy on Docker Swarm, they create a distributed system with 4 containers. For the sake of simplicity I had created a different docker-compose file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    version: &#39;3&#39;
+
+    services:
+      minio1:
+        image: minio/minio:RELEASE.2017-03-16T21-50-32Z
+        volumes:
+          - /mnt/swarm-nfs/minio:/export
+        ports:
+          - &amp;quot;9001:9000&amp;quot;
+        environment:
+          MINIO_ACCESS_KEY: accesskey-example
+          MINIO_SECRET_KEY: key-example
+        deploy:
+          restart_policy:
+            delay: 10s
+            max_attempts: 10
+            window: 60s
+    command: server /export
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This docker compose file will map the port 9001 to the port 9000 inside the container, will use a folder on the NFS mount and map it to the folder /export inside the container and will execute the command &lt;code&gt;server /export&lt;/code&gt; when the service boots, which starts the Minio application.&lt;/p&gt;
+
+&lt;p&gt;To start a service from a docker compose file we need to use the &lt;code&gt;docker stack deploy&lt;/code&gt; command:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;docker stack deploy --compose-file=docker-compose.yaml minio&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;We can reach this application on the IP of any of the Swarm nodes on port 9001.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/minio-login.png&#34; alt=&#34;Minio Login&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Then we create an S3 bucket for our &lt;strong&gt;Private Docker Registry&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/minio-interface.png&#34; alt=&#34;Minio Interface&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;local-docker-registry-using-s3-and-nfs&#34;&gt;Local Docker Registry using s3 and NFS&lt;/h3&gt;
+
+&lt;p&gt;In case your organization can&amp;rsquo;t or doesn&amp;rsquo;t want to use the public docker hub to store it&amp;rsquo;s containers, you should use a Private Docker Registry.&lt;/p&gt;
+
+&lt;p&gt;Tho allow the &lt;strong&gt;Local Docker Registry&lt;/strong&gt; to Switch between nodes of the Swarm while having access to the stored Docker images and all the data the container needs to be recreated, we will be using both &lt;strong&gt;NFS&lt;/strong&gt;(for the TLS certificates) and &lt;strong&gt;S3&lt;/strong&gt;(to store the Docker images).&lt;/p&gt;
+
+&lt;p&gt;I had created a docker-compose file that configures both solutions for us:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    version: &#39;3&#39;
+
+    services:
+    registry:
+        image: registry:2
+        volumes:
+          - /mnt/swarm-nfs/registry/cert:/cert
+        ports:
+          - &amp;quot;5000:5000&amp;quot;
+        environment:
+          REGISTRY_STORAGE: s3
+          REGISTRY_STORAGE_S3_ACCESSKEY: accesskey-example
+          REGISTRY_STORAGE_S3_secretkey: key-example
+          REGISTRY_STORAGE_S3_BUCKET: docker-registry
+          REGISTRY_STORAGE_S3_REGIONENDPOINT: http://minio1:9001
+          REGISTRY_STORAGE_S3_REGION: us-east-1
+          REGISTRY_LOG_LEVEL: debug
+          REGISTRY_HTTP_TLS_CERTIFICATE: /cert/domain.crt
+          REGISTRY_HTTP_TLS_KEY: /cert/domain.key
+        deploy:
+          restart_policy:
+            delay: 10s
+            max_attempts: 10
+            window: 60s
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This example mounts a folder on the NFS to store the &lt;strong&gt;TLS&lt;/strong&gt; certificates and uses the &lt;strong&gt;S3&lt;/strong&gt; bucket we created with &lt;strong&gt;Minio&lt;/strong&gt; to store the Docker images.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;#docker stack deploy --compose-file=docker-compose.yaml registry&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;You can find more information about the registry and how to use it on the official &lt;a href=&#34;https://docs.docker.com/registry/&#34;&gt;documentation&lt;/a&gt;.&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Debug Docker Swarm Services</title>
+      <link>http://www.carles.cc/2017/04/debug-docker-swarm-services/</link>
+      <pubDate>Fri, 14 Apr 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://www.carles.cc/2017/04/debug-docker-swarm-services/</guid>
+      <description>&lt;p&gt;The current stable version of Docker Swarm has an important feature missing, and is the same control over logs available without orchestratrion.
+&lt;/p&gt;
+
+&lt;p&gt;It can be really painful to &lt;strong&gt;debug&lt;/strong&gt; a &lt;code&gt;docker swarm create&lt;/code&gt; command that ends in a &lt;code&gt;&amp;quot;task: non-zero exit (1)&amp;quot;&lt;/code&gt; kind of error.&lt;/p&gt;
+
+&lt;p&gt;But, the docker team is working in a solution, they started developing it when Docker Swarm Mode appeared, and it is already available as an &lt;em&gt;experimental feature&lt;/em&gt;, so in this article I will explain how to enable experimental features on Docker Swarm and how to use the new &lt;code&gt;docker service log&lt;/code&gt; command.&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $docker service logs px8fv06fft8s
+    only supported with experimental daemon
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h2 id=&#34;how-to-enable-docker-daemon-experimental-features&#34;&gt;How to enable Docker Daemon experimental features&lt;/h2&gt;
+
+&lt;p&gt;You can follow the official documentation &lt;a href=&#34;https://github.com/docker/docker/tree/master/experimental&#34;&gt;here&lt;/a&gt; , but I will briefly explain the necessary steps.&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;Create the file &lt;strong&gt;/etc/docker/daemon.json&lt;/strong&gt; with the following content:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{    
+&amp;quot;experimental&amp;quot;: true
+}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Restart the docker daemon
+&lt;br /&gt;&lt;/li&gt;
+&lt;/ol&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;code&gt;systemctl restart docker&lt;/code&gt;&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;Test if the experimental features are enabled:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;docker version -f &#39;{{.Server.Experimental}}&#39;
+
+true
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;code&gt;docker service logs&lt;/code&gt; is not the only experimental feature being backed for Docker Swarm, there are other very interesting ones like Metrics for &lt;strong&gt;Prometheus&lt;/strong&gt; for basic container, image, and daemon operations.&lt;/p&gt;
+
+&lt;h2 id=&#34;using-docker-service-logs&#34;&gt;Using Docker Service Logs&lt;/h2&gt;
+
+&lt;p&gt;This new feature is very straightforward in it&amp;rsquo;s use, specially if you are familiarized with debuging problems using logs on non orchestrated docker installations (without the swarm).&lt;/p&gt;
+
+&lt;p&gt;After any &lt;code&gt;docker service create ...&lt;/code&gt; an &lt;strong&gt;ID&lt;/strong&gt; for this service is shown:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $docker service create --name jenkins -p 8082:8080 -p 50000:50000 -e JENKINS_OPTS=&amp;quot;--prefix=/jenkins&amp;quot; --mount &amp;quot;type=bind,source=/mnt/swarm-nfs/jenkins-fg,target=/var/jenkins_home&amp;quot; --reserve-memory 300m jenkins
+
+    v6oq1shzs51fw6q8d2bstkd2f
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;So in this example we had created a service to run &lt;strong&gt;Jenkins&lt;/strong&gt;, this service is using &lt;strong&gt;NFS&lt;/strong&gt; for data persistance, and after the command is executed we obtain the &lt;strong&gt;ID&lt;/strong&gt; of the service, that in this case is &lt;code&gt;v6oq1shzs51fw6q8d2bstkd2f&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;To check the status of the service, you can use the &lt;code&gt;docker service ps&lt;/code&gt; command&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $docker service ps jenkins
+
+    ID            NAME              IMAGE           NODE                                          DESIRED STATE  CURRENT STATE                  ERROR                      PORTS
+    j33856j3oxt1  jenkins-fg.1      jenkins:latest  mc-swarm-app-place01-live.mcon-group.systems  Ready          Ready 2 seconds ago                                       
+    aaig0ummuhnq   \_ jenkins-fg.1  jenkins:latest  mc-swarm-app-place03-live.mcon-group.systems  Shutdown       Failed less than a second ago  &amp;quot;task: non-zero exit (1)&amp;quot;  
+    fqsp16ixgft3   \_ jenkins-fg.1  jenkins:latest  mc-swarm-app-place01-live.mcon-group.systems  Shutdown       Failed 10 seconds ago          &amp;quot;task: non-zero exit (1)&amp;quot;  
+    kn9c09vy06x1   \_ jenkins-fg.1  jenkins:latest  mc-swarm-app-place02-live.mcon-group.systems  Shutdown       Failed 11 seconds ago          &amp;quot;task: non-zero exit (1)&amp;quot;  
+    t48zk8hmn2ga   \_ jenkins-fg.1  jenkins:latest  mc-swarm-app-place03-live.mcon-group.systems  Shutdown       Failed 18 seconds ago          &amp;quot;task: non-zero exit (1)&amp;quot;  
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;Here we can see the run process for the container failed to succeed, we also are informed in which member of the swarm the container was trying to start, but we don&amp;rsquo;t get any information of why this error happened.&lt;/p&gt;
+
+&lt;p&gt;So to find out, we check the logs of the starting process:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $docker service logs j4kawvh4b41h
+    jenkins-fg.1.r7qd0204i7sz@mc-swarm-app-place01-live.mcon-group.systems    | touch: cannot touch ‘/var/jenkins_home/copy_reference_file.log’: Permission denied
+    jenkins-fg.1.60jtwoggnm0q@mc-swarm-app-place03-live.mcon-group.systems    | touch: cannot touch ‘/var/jenkins_home/copy_reference_file.log’: Permission denied
+    jenkins-fg.1.kkvqtiyek4wq@mc-swarm-app-place01-live.mcon-group.systems    | touch: cannot touch ‘/var/jenkins_home/copy_reference_file.log’: Permission denied
+    jenkins-fg.1.r7qd0204i7sz@mc-swarm-app-place01-live.mcon-group.systems    | Can not write to /var/jenkins_home/copy_reference_file.log. Wrong volume permissions?
+    jenkins-fg.1.kkvqtiyek4wq@mc-swarm-app-place01-live.mcon-group.systems    | Can not write to /var/jenkins_home/copy_reference_file.log. Wrong volume permissions?
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The logs clearly show that the problem on this example was wrong permissions on a folder that was mounted during the service creation using an NFS filesystem, problem that we can easily solve using &lt;code&gt;chmod&lt;/code&gt; or mapping on NFS.&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Graphical Interfaces for Docker Swarm</title>
+      <link>http://www.carles.cc/2017/04/graphical-interfaces-for-docker-swarm/</link>
+      <pubDate>Mon, 10 Apr 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://www.carles.cc/2017/04/graphical-interfaces-for-docker-swarm/</guid>
+      <description>&lt;p&gt;In this article I will explore some different options for graphical interfaces to manage a Docker Swarm cluster and I will show how to install Portainer as a Swarm Service.
+&lt;/p&gt;
+
+&lt;h2 id=&#34;introduction&#34;&gt;Introduction&lt;/h2&gt;
+
+&lt;p&gt;The ecosystem of graphical interfaces for Docker is experiencing a fast grow and improvement lately, and I believe it will continue to do so for the next years.&lt;/p&gt;
+
+&lt;p&gt;In my opinion the status of the Docker ecosystem requires still to work mostly using the CLI tools, they are mature and well documented, not so much yet the GUI tools available to manage a Swarm.&lt;/p&gt;
+
+&lt;p&gt;In this article I will analyze some of them, specially &lt;a href=&#34;http://portainer.io/&#34;&gt;portainer&lt;/a&gt;, &lt;a href=&#34;https://shipyard.com&#34;&gt;shipyard&lt;/a&gt; and &lt;a href=&#34;http://rancher.com/&#34;&gt;rancher&lt;/a&gt;. But there are a few others, some of them interesting enough to take a further look, like &lt;a href=&#34;http://panamax.io&#34;&gt;panamax&lt;/a&gt; or &lt;a href=&#34;https://cloud.docker.com/&#34;&gt;Docker Cloud&lt;/a&gt;. Other articles with an overview of this tools and more can be found in:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://blog.ouseful.info/2015/08/10/seven-graphical-interfaces-to-docker/&#34;&gt;seven-graphical-interfaces-to-docker&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;7 Web Interfaces for Container Management and Orchestration&#34;&gt;7 Web Interfaces for Container Management and Orchestration&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;portainer&#34;&gt;Portainer&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://demo.portainer.io/images/logo_alt.png&#34; alt=&#34;portainer logo&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Portainer is by far the easiest one to install, it does not require a separated container for the DB, the interface  is very fast and responsive, great to have an overview of what is happening on the Cluster.&lt;/p&gt;
+
+&lt;p&gt;The product is sold as an easy way to manage Docker and Docker Swarm, but it actually has many downsides, first of all it is still not able to launch containers and apps as a Swarm Service. In general, it&amp;rsquo;s Swarm integration is still far from what it Should be to be really useful.&lt;/p&gt;
+
+&lt;p&gt;It also lacks local registry configuration and Active Directory integration, which are both very important features for our organization. There are news that they will be offering a separated module for AD integration end of the year, but it will be paid.&lt;/p&gt;
+
+&lt;p&gt;In general, I really like it&amp;rsquo;s simplicity, the interface, and I find it very useful to have a fast overview of the status of the Swarm, and also great are the possibilities to debug containers, allowing you to check the logs, access to the shell and check it&amp;rsquo;s performance graphs.&lt;/p&gt;
+
+&lt;h2 id=&#34;shipyard&#34;&gt;Shipyard&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://www.safaribooksonline.com/library/view/docker-creating-structured/9781786465931/graphics/B04203_10_01.jpg&#34; alt=&#34;Shipyard logo&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Shipyard is built to be a great UI for docker Swarm, it has support for Swarm services, local registries and AD integration.&lt;/p&gt;
+
+&lt;p&gt;The problem with Shipyard is it&amp;rsquo;s installation, and not because is difficult, they offer 2 options to install, one based on a script, called automatic, and another one manual were you have to create 6 containers for the app, which is also not complicated. The problem I find with this approach is mostly the lack of a processs to install Shipyard as a Swarm Service. I find an application with a focus on being the management portal of your Swarm Cluster needs to have HA capabilities.&lt;/p&gt;
+
+&lt;p&gt;I don&amp;rsquo;t understand why they automatize the installation process with an script and not with a docker-compose file, I would also appreciate the possibility to change their db container (It uses RethinkDB) to some external database service, maybe MySQL, so you can achieve data persistence using services like AWS RDS or just an external database.&lt;/p&gt;
+
+&lt;p&gt;This is a complain I have actually about all the Swarm/Kubernetes tools I had examined.&lt;/p&gt;
+
+&lt;p&gt;In general Shipyard is already pretty feature rich, it&amp;rsquo;s interface is clear and responsive and I like it&amp;rsquo;s focus on providing support for Docker Swarm.&lt;/p&gt;
+
+&lt;h2 id=&#34;rancher&#34;&gt;Rancher&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&#34;https://cdn.evbuc.com/eventlogos/90565841/rancherlogofinal.png&#34; alt=&#34;Rancher logo&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Rancher is a very powerful tool, well done, and the most enterprise grade of this 3 options. It has RBAC, AD integration and detailed audit logs. Also, it&amp;rsquo;s existing catalog of applications and the way you can add new ones is the best one from this 3 options.&lt;/p&gt;
+
+&lt;p&gt;It supports &lt;strong&gt;Docker Swarm&lt;/strong&gt; (Recently Added), &lt;strong&gt;Kubernetes&lt;/strong&gt; and Rancher&amp;rsquo;s own orchestration called &lt;strong&gt;Cattle&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Rancher recommendation is to install it outside the Swarm, in an independent host, I have to say this is an idea I don&amp;rsquo;t like. I like to keep the architecture as simple as possible, specially when I think about tools like AWS CloudFormation, and I don&amp;rsquo;t want to think much in how to add High Availability to a tool like this, it should come out-of-the-box, or even better, use the Swarm Cluster.&lt;/p&gt;
+
+&lt;p&gt;It also does not offer instructions to be installed as a Swarm Service, and, Docker Swarm still appears as in testing/beta state in some parts of it&amp;rsquo;s website and documentation.&lt;/p&gt;
+
+&lt;h2 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;I think the 3 tools are great, almost ready for me, but not yet. At this point I still think managing and configuring your local registries, compose files and in some cases the scripts with API calls is better done through &lt;strong&gt;CLI&lt;/strong&gt; than trying to use web interfaces.&lt;/p&gt;
+
+&lt;p&gt;For sure I will give this tools a new oportunity in the near future, because I am sure they will continue improving at a fast pace and is probable that in my organization we end using one of them to administer our Swarm, just, not yet.&lt;/p&gt;
+
+&lt;p&gt;I don&amp;rsquo;t understand why there is not a clear and fast way to configure persistent storage with an external database, is something I do often on some of the Docker Files I wrote, and for me it is a pretty elegant solucion to have a Service Running in the Swarm with High Availability.&lt;/p&gt;
+
+&lt;p&gt;I am pretty sure many readers of this article will disagree with me, or maybe point me in the right direction. I welcome any different point of view in the comments.&lt;/p&gt;
+
+&lt;p&gt;Nevertheless, I will install &lt;strong&gt;Portainer&lt;/strong&gt; as a service in my Docker Swarm, while I will not use it for management tasks, it is still a great tool to get a graphical overview of the Cluster and also to debug problems with single containers.&lt;/p&gt;
+
+&lt;h2 id=&#34;installing-portainer-as-a-swarm-service&#34;&gt;Installing Portainer as a Swarm Service&lt;/h2&gt;
+
+&lt;p&gt;The official instructions to install &lt;strong&gt;Portainer&lt;/strong&gt; have recently included a way to install it as a Swarm Service, while I like more this solution than to have it without HA, It is worth mentioning that since there&amp;rsquo;s no way to point portainer to an external storage for configuration, every time the service switches from host to host, the admin credentials will have to be reconfigured, and all configurations, if any, done inside the Portainer interface will be lost.&lt;/p&gt;
+
+&lt;p&gt;To install and start Portainer as a Swarm Service connect to a &lt;strong&gt;Manager Node&lt;/strong&gt; and run the following command:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;docker service create     --name portainer     --publish 9000:9000     --constraint &#39;node.role == manager&#39;     --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock     portainer/portainer     -H unix:///var/run/docker.sock&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;This will create a Service called &lt;em&gt;portainer&lt;/em&gt;, publish is internal 9000 port to the outside, and limit the Nodes it can run to Manager Nodes, this is because only the Manager Nodes can give and overview of the state of the Swarm and do changes on it.&lt;/p&gt;
+
+&lt;p&gt;After that we can already connect to it, by using the IP of any of the Nodes (Mesh Networking on Swarm) and the port 9000.
+&lt;img src=&#34;http://www.carles.cc/img/portainer.png&#34; alt=&#34;Portainer Log-in&#34; /&gt;&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>Create Docker Swarm on Centos</title>
+      <link>http://www.carles.cc/2017/04/create-docker-swarm-on-centos/</link>
+      <pubDate>Fri, 07 Apr 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://www.carles.cc/2017/04/create-docker-swarm-on-centos/</guid>
+      <description>&lt;p&gt;The goal of this article is to achieve a clean installation of Docker and Docker Swarm on Centos 7.X, then we will also create our first cluster.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;To do this we start by installing Docker from the official repositories of Centos, then create a cluster with 2 Master nodes and 1 Worker node as an example and use basic docker swarm commands to check the status of our cluster.&lt;/p&gt;
+
+&lt;p&gt;Other articles will follow explaining how to create services, use a local Docker Registry, Docker compose and other related topics.&lt;/p&gt;
+
+&lt;h2 id=&#34;install-docker-using-the-docker-official-repositories&#34;&gt;Install Docker using the Docker Official Repositories&lt;/h2&gt;
+
+&lt;p&gt;To do this we can follow the official &lt;a href=&#34;https://docs.docker.com/engine/installation/linux/centos/&#34;&gt;documentation&lt;/a&gt;, but here you have what you need to do:&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;Install &lt;em&gt;yum-utils&lt;/em&gt;, which provides the &lt;em&gt;yum-config-manager&lt;/em&gt; utility:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo yum install -y yum-utils
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Use yum-config-manager to install the repository:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo yum-config-manager \
+    --add-repo \
+    https://download.docker.com/linux/centos/docker-ce.repo
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Install Docker&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo yum makecache fast
+$ sudo yum install docker-ce
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;In order to check the version of docker that we have installed&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo docker version
+Client:
+ Version:      17.03.1-ce
+ API version:  1.27
+ Go version:   go1.7.5
+ Git commit:   c6d412e
+ Built:        Mon Mar 27 17:05:44 2017
+ OS/Arch:      linux/amd64
+
+Server:
+ Version:      17.03.1-ce
+ API version:  1.27 (minimum version 1.12)
+ Go version:   go1.7.5
+ Git commit:   c6d412e
+ Built:        Mon Mar 27 17:05:44 2017
+ OS/Arch:      linux/amd64
+ Experimental: false
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;On production systems is advised by the official documentation to do not always blindly update to the latest version. To list all available versions of docker existing on the repository, you can use the following command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ yum list docker-ce.x86_64  --showduplicates |sort -r
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;Enable the Docker Daemon&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ sudo systemctl enable docker
+$ sudo systemctl start docker
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&#34;create-the-docker-swarm-cluster&#34;&gt;Create the Docker Swarm Cluster&lt;/h2&gt;
+
+&lt;h3 id=&#34;prerequisites&#34;&gt;Prerequisites&lt;/h3&gt;
+
+&lt;p&gt;The prerequisites to follow this tutorial are pretty straighforward:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Docker version &amp;gt; 1.12 (Swarm mode was introduced in this version)&lt;/li&gt;
+&lt;li&gt;The following ports must be available between members of the Cluster:
+
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;TCP port 2377&lt;/strong&gt; for cluster management communications&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;TCP&lt;/strong&gt; and &lt;strong&gt;UDP port 7946&lt;/strong&gt; for communication among nodes&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;UDP port 4789&lt;/strong&gt; for overlay network traffic
+&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;If you are planning on creating an overlay network with encryption (&amp;ndash;opt encrypted), you will also need to ensure &lt;strong&gt;ip protocol 50 (ESP)&lt;/strong&gt; traffic is allowed.&lt;/p&gt;
+
+&lt;h3 id=&#34;create-the-swarm&#34;&gt;Create the Swarm&lt;/h3&gt;
+
+&lt;p&gt;First we will create a Manager node, this action will give us the comments used to add other nodes to the cluster.&lt;/p&gt;
+
+&lt;p&gt;First we SSH into the node we want to use as a Manager:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ ssh node1
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;ol&gt;
+&lt;li&gt;Run the command to initialize the swarm Manager:&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;In our lab the IP of the Node that initizes the Swarm is 172.21.177.34:2377&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ docker swarm init --advertise-addr &amp;lt;MANAGER-IP&amp;gt;
+
+    Swarm initialized: current node (rt7coj28xc3hcgxu84m951w43) is now a manager.
+
+    To add a worker to this swarm, run the following command:
+
+        docker swarm join \
+        --token SWMTKN-1-4dt83pm5az465u6cp6gftcmcwi4s16n0y5qliw526oaix44l74-026n87wpf9tt2d97gcp6uc2ht \
+       172.21.177.34:2377
+
+    To add a manager to this swarm, run &#39;docker swarm join-token manager&#39; and follow the instructions.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;The &lt;em&gt;&amp;ndash;advertise-addr&lt;/em&gt; flag makes the Manager publish it&amp;rsquo;s address.&lt;/p&gt;
+
+&lt;ol&gt;
+&lt;li&gt;&lt;p&gt;Add a new Node to Cluster as Worker&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;$ docker swarm join --token SWMTKN-1-4dt83pm5az465u6cp6gftcmcwi4s16n0y5qliw526oaix44l74-026n87wpf9tt2d97gcp6uc2ht 172.21.177.34:2377
+This node joined a swarm as a worker.
+&lt;/code&gt;&lt;/pre&gt;&lt;/li&gt;
+
+&lt;li&gt;&lt;p&gt;Add a new Node to the Cluster as Manager&lt;/p&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;This part of the official documentation is not clearly explained, the following command has to be executed in the server that was used as the master, were we initialized the Cluster, and, it is important to know that one of the Masters will act as a leader, and that the manager nodes share data using &lt;em&gt;Raft&lt;/em&gt;, so it is recommended an odd number of Master Nodes for production (3 or 5 minimum)&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/docker-swarm-raft.jpg&#34; alt=&#34;Docker Swarm Raft&#34; /&gt;
+        $ docker swarm join-token manager
+        To add a manager to this swarm, run the following command:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    docker swarm join \
+    --token     SWMTKN-1-4dt83pm5az465u6cp6gftcmcwi4s16n0y5qliw526oaix44l74-5t75b72i0dyna8p9quga2odzu \
+172.21.177.34:2377
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;We will then execute the resulting command in the second Manager node for our example:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ docker swarm join --token SWMTKN-1-4dt83pm5az465u6cp6gftcmcwi4s16n0y5qliw526oaix44l74-5t75b72i0dyna8p9quga2odzu 172.21.177.34:2377
+    This node joined a swarm as a manager.
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;h3 id=&#34;check-the-status-of-the-swarm&#34;&gt;Check the status of the Swarm&lt;/h3&gt;
+
+&lt;p&gt;We can use the commands &lt;em&gt;docker info&lt;/em&gt; and &lt;em&gt;docker node ls&lt;/em&gt; to check the status of the Swarm Cluster&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ docker info
+    ...
+
+
+Swarm: active
+ NodeID: wn6l2pua4mvv6m9s7laez2hc2
+ Is Manager: true
+ ClusterID: lkz7zs8vwr1lf41n2ay4bftgy
+ Managers: 2
+ Nodes: 3
+ Orchestration:
+  Task History Retention Limit: 5
+ Raft:
+  Snapshot Interval: 10000
+  Number of Old Snapshots to Retain: 0
+  Heartbeat Tick: 1
+  Election Tick: 3
+
+  ...
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;-&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    $ docker node ls
+
+    ID                           HOSTNAME                                      STATUS  AVAILABILITY  MANAGER STATUS
+    rt7coj28xc3hcgxu84m951w43    node1                                         Ready   Active        Leader
+    tjadwr4itnry5swuuhtytgrjl    node2                                         Ready   Active        
+    wn6l2pua4mvv6m9s7laez2hc2 *  node3                                         Ready   Active        Reachable
+&lt;/code&gt;&lt;/pre&gt;</description>
+    </item>
+    
+    <item>
+      <title>First Post</title>
+      <link>http://www.carles.cc/2017/02/first-post/</link>
+      <pubDate>Sun, 26 Feb 2017 00:00:05 +0800</pubDate>
+      
+      <guid>http://www.carles.cc/2017/02/first-post/</guid>
+      <description>&lt;p&gt;This is the first post on my new blog &lt;strong&gt;www.carles.cc&lt;/strong&gt;. I will try to use this platform to fix some of the knowledge I generate through my work and hobbies in fields like I.T infrastructure, DevOps, CI/CD, hosting, docker, Raspberry Pi, Software Development and others.&lt;/p&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
