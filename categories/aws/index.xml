@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Aws on Carles IT Blog</title>
+    <link>http://www.carles.cc/categories/aws/index.xml</link>
+    <description>Recent content in Aws on Carles IT Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="http://www.carles.cc/categories/aws/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>AWS China, Big Data and IoT (PART 1)</title>
+      <link>http://www.carles.cc/2017/07/aws-china-big-data-and-iot-part-1/</link>
+      <pubDate>Tue, 18 Jul 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://www.carles.cc/2017/07/aws-china-big-data-and-iot-part-1/</guid>
+      <description>&lt;p&gt;Apart from Docker and DevOps methodologies, the other big topics that I enjoy the most currently at work are Cloud Architecture and Big Data/IoT.&lt;/p&gt;
+
+&lt;p&gt;In this article I would like to describe a little bit the situation of AWS in China, specially what is the current status of Services Available and what is the forecast of improvement that we can hopefully expect for the next months.&lt;/p&gt;
+
+&lt;p&gt;I will also try to provide an step by step guide to create an infrastructure made with IoT in mind, where we can achieve an scalable, secure and ServerLess installation using only AWS Services that are currently available in China.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;aws-china-vs-aws-europe&#34;&gt;AWS China VS AWS Europe&lt;/h2&gt;
+
+&lt;p&gt;For this face to face comparison, I will take AWS China North Region, which is currently the only AWS Region available in China, against AWS Europe West Region, Ireland, which is one of the most advanced and up-to-date AWS Regions (Frankfurt is usually a bit behind in terms of Services and Features).&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s see a screenshot with the current list of Services:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-Ireland-Region.png&#34; alt=&#34;Lots of Services&#34; title=&#34;Services in Ireland Region&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-China-Region.png&#34; alt=&#34;Not that many...&#34; title=&#34;Services in China Region&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;It is easy to see the big difference in the ammount of services between this 2 regions, if we put our focus in IoT/Big Data/Predictive Modeling, we find very fast some hurting absences like &lt;em&gt;Lambda&lt;/em&gt;, &lt;em&gt;Database Migration Service&lt;/em&gt;, &lt;em&gt;Athena&lt;/em&gt;, &lt;em&gt;Kinesis Firehose&lt;/em&gt;, &lt;em&gt;GreenGrass&lt;/em&gt;, &lt;em&gt;QuickSight&lt;/em&gt; or &lt;em&gt;Machine Learning&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;This means that we can&amp;rsquo;t create an infrastructure for Big Data or IoT in Amazon AWS China? &lt;strong&gt;Of course not&lt;/strong&gt;, we just need a bit more imagination, and sometimes to put a bit more of glue manually.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;NOTE: In general, seems the situation is going to improve soon, AWS is not a friend of releasing Roadmaps with exact dates, but from my conversations with the AWS guys seems that we will have &lt;em&gt;Lambda&lt;/em&gt; next month, &lt;em&gt;GreenGrass&lt;/em&gt; before end of the year, and around Christmas, the new AWS Region in NingXia, this Region is supposed to be in a different level than the current Beijing region, and will start from the begining with 3 Availability Zones and many more services than the actually available in Beijing.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;iot-infrastructure&#34;&gt;IoT Infrastructure&lt;/h2&gt;
+
+&lt;p&gt;If we were in another region, I would like to propose a database free, ServerLess S3 based infrastructure, with Firehose and Probably Athena or Quicksight on top of S3.&lt;/p&gt;
+
+&lt;p&gt;But in China we can still propose some cool solutions, like the following one:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-IoT-Article.png&#34; alt=&#34;IoT Architecture&#34; title=&#34;AWS CN IoT Architecture&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The main goals when designing this architecture were:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;ServerLess (Only the BI Dashboard solution requires a server that has to be administered)&lt;/li&gt;
+&lt;li&gt;Easy to Scale&lt;/li&gt;
+&lt;li&gt;Encrypted at transit and at rest&lt;/li&gt;
+&lt;li&gt;Cheap&lt;/li&gt;
+&lt;li&gt;Easy to manage&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In my opinion we achieved our goals with this infrastructure, I will explain in the next sections of this article why I think so.&lt;/p&gt;
+
+&lt;p&gt;Another good points of this infrastructure are that Redshift with it&amp;rsquo;s PostgreSQL drivers can be easily linked with some of the best BI Dashboard solutions out there, like &lt;a href=&#34;https://www.tableau.com/&#34;&gt;tableau&lt;/a&gt; , &lt;a href=&#34;https://www.qlik.com/us/&#34;&gt;Qlik&lt;/a&gt; or others.&lt;/p&gt;
+
+&lt;p&gt;On top of that (I might detail the integration of this services on a following article) &lt;em&gt;AWS Machine Learning&lt;/em&gt; and &lt;em&gt;Glacier&lt;/em&gt; can be easily integrated for Predictive Modeling and cheap long term backup storage.&lt;/p&gt;
+
+&lt;p&gt;In the next article PART 2 I will go through the step by step implementation.&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>HA Private Registry with S3 and NFS</title>
+      <link>http://www.carles.cc/2017/04/ha-private-registry-with-s3-and-nfs/</link>
+      <pubDate>Tue, 18 Apr 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://www.carles.cc/2017/04/ha-private-registry-with-s3-and-nfs/</guid>
+      <description>&lt;p&gt;Stateless is used as a solution for everything nowadays: scale, containerize, make fault tolerant&amp;hellip; But it is a reality that not everything can be stateless, even if you store the configurations inside the containers, you need to store static files somewhere, you need databases that are stateful by definition, and not all the tools that you will be using are created to be stateless.
+&lt;/p&gt;
+
+&lt;p&gt;So at one point or another, it is necessary to also have solutions in place in order to run statefull applications. In this article I will descrive the 2 solutions that can fulfill this requirements, NFS/&lt;a href=&#34;https://aws.amazon.com/efs/&#34; title=&#34;AWS Elastic File System&#34;&gt;EFS&lt;/a&gt; and &lt;a href=&#34;https://minio.io&#34; title=&#34;Distributed Object Storage&#34;&gt;Minio&lt;/a&gt;/&lt;a href=&#34;https://aws.amazon.com/s3&#34; title=&#34;AWS Simple Storage Service&#34;&gt;S3&lt;/a&gt;, and use them to create a Docker Local Registry and a Jenkins running on a Swarm cluster.&lt;/p&gt;
+
+&lt;p&gt;The tools I am choosing allow you to create cloud infrastructure, which is the right way to go, but not limiting where you can deploy it, the idea is to become cloud provider agnostic.&lt;/p&gt;
+
+&lt;h2 id=&#34;nfs-and-efs&#34;&gt;NFS and EFS&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://aws.amazon.com/efs/&#34; title=&#34;AWS Elastic File System&#34;&gt;EFS&lt;/a&gt;  is a quite new storage solution on AWS, it uses standard NFSv4 protocol but adding automatic scalability and different options to fine tune IOPS and lantencies, another great feature is multiAZ configurations. On this example I will be using an NFS server installed locally in our office lab, either using traditional NFS servers or  &lt;a href=&#34;https://aws.amazon.com/efs/&#34; title=&#34;AWS Elastic File System&#34;&gt;EFS&lt;/a&gt; is transparent for docker swarm, is done the same way.&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s take a look at the example I used in my previous article, create a &lt;strong&gt;Swarm Service&lt;/strong&gt; for jenkins:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    docker service create --name jenkins-fg -p 8082:8080 -p 50000:50000 -e JENKINS_OPTS=&amp;quot;--prefix=/jenkins&amp;quot; --mount &amp;quot;type=bind,source=/mnt/swarm-nfs/jenkins-fg,target=/var/jenkins_home&amp;quot; --reserve-memory 300m jenkins
+
+    v6oq1shzs51fw6q8d2bstkd2f
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;What&amp;rsquo;s special in this command is the &lt;code&gt;--mount&lt;/code&gt; option, against the more traditional &lt;strong&gt;docker volume&lt;/strong&gt; &lt;code&gt;-v&lt;/code&gt;. You can read the official Docker documentation on how to configure &lt;a href=&#34;https://docs.docker.com/engine/swarm/services/#configure-mounts&#34;&gt;mounts&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Obviously the same NFS mount should be configured in all the nodes of your Swarm, this will allow for the containers to start in any of the different nodes without any data or configuration lost.&lt;/p&gt;
+
+&lt;h2 id=&#34;minio-io-and-s3&#34;&gt;Minio.io and S3&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://minio.io&#34; title=&#34;Distributed Object Storage&#34;&gt;Minio&lt;/a&gt; is a distributed object storage server built for cloud applications and DevOps. It allow us to self host &lt;a href=&#34;https://aws.amazon.com/s3&#34; title=&#34;AWS Simple Storage Service&#34;&gt;S3&lt;/a&gt;, that we will be using when installing the local &lt;strong&gt;Docker Service Registry&lt;/strong&gt;. In this way the private registry will be able to have persistent data for the Docker Images and if necessary we can even synchronize S3 buckets between on-premises infrastructure and the AWS cloud.&lt;/p&gt;
+
+&lt;h3 id=&#34;installing-minio&#34;&gt;Installing Minio&lt;/h3&gt;
+
+&lt;p&gt;To install &lt;a href=&#34;https://minio.io&#34; title=&#34;Distributed Object Storage&#34;&gt;Minio&lt;/a&gt; as a Swarm Service we can create a Docker Compose file, in this file we will be also using NFS as a mount.&lt;/p&gt;
+
+&lt;p&gt;On the official Minio &lt;a href=&#34;https://docs.minio.io/docs/deploy-minio-on-docker-swarm&#34;&gt;documentation&lt;/a&gt; to deploy on Docker Swarm, they create a distributed system with 4 containers. For the sake of simplicity I had created a different docker-compose file:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    version: &#39;3&#39;
+
+    services:
+      minio1:
+        image: minio/minio:RELEASE.2017-03-16T21-50-32Z
+        volumes:
+          - /mnt/swarm-nfs/minio:/export
+        ports:
+          - &amp;quot;9001:9000&amp;quot;
+        environment:
+          MINIO_ACCESS_KEY: accesskey-example
+          MINIO_SECRET_KEY: key-example
+        deploy:
+          restart_policy:
+            delay: 10s
+            max_attempts: 10
+            window: 60s
+    command: server /export
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This docker compose file will map the port 9001 to the port 9000 inside the container, will use a folder on the NFS mount and map it to the folder /export inside the container and will execute the command &lt;code&gt;server /export&lt;/code&gt; when the service boots, which starts the Minio application.&lt;/p&gt;
+
+&lt;p&gt;To start a service from a docker compose file we need to use the &lt;code&gt;docker stack deploy&lt;/code&gt; command:&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;docker stack deploy --compose-file=docker-compose.yaml minio&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;We can reach this application on the IP of any of the Swarm nodes on port 9001.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/minio-login.png&#34; alt=&#34;Minio Login&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Then we create an S3 bucket for our &lt;strong&gt;Private Docker Registry&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/minio-interface.png&#34; alt=&#34;Minio Interface&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;local-docker-registry-using-s3-and-nfs&#34;&gt;Local Docker Registry using s3 and NFS&lt;/h3&gt;
+
+&lt;p&gt;In case your organization can&amp;rsquo;t or doesn&amp;rsquo;t want to use the public docker hub to store it&amp;rsquo;s containers, you should use a Private Docker Registry.&lt;/p&gt;
+
+&lt;p&gt;Tho allow the &lt;strong&gt;Local Docker Registry&lt;/strong&gt; to Switch between nodes of the Swarm while having access to the stored Docker images and all the data the container needs to be recreated, we will be using both &lt;strong&gt;NFS&lt;/strong&gt;(for the TLS certificates) and &lt;strong&gt;S3&lt;/strong&gt;(to store the Docker images).&lt;/p&gt;
+
+&lt;p&gt;I had created a docker-compose file that configures both solutions for us:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;    version: &#39;3&#39;
+
+    services:
+    registry:
+        image: registry:2
+        volumes:
+          - /mnt/swarm-nfs/registry/cert:/cert
+        ports:
+          - &amp;quot;5000:5000&amp;quot;
+        environment:
+          REGISTRY_STORAGE: s3
+          REGISTRY_STORAGE_S3_ACCESSKEY: accesskey-example
+          REGISTRY_STORAGE_S3_secretkey: key-example
+          REGISTRY_STORAGE_S3_BUCKET: docker-registry
+          REGISTRY_STORAGE_S3_REGIONENDPOINT: http://minio1:9001
+          REGISTRY_STORAGE_S3_REGION: us-east-1
+          REGISTRY_LOG_LEVEL: debug
+          REGISTRY_HTTP_TLS_CERTIFICATE: /cert/domain.crt
+          REGISTRY_HTTP_TLS_KEY: /cert/domain.key
+        deploy:
+          restart_policy:
+            delay: 10s
+            max_attempts: 10
+            window: 60s
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;This example mounts a folder on the NFS to store the &lt;strong&gt;TLS&lt;/strong&gt; certificates and uses the &lt;strong&gt;S3&lt;/strong&gt; bucket we created with &lt;strong&gt;Minio&lt;/strong&gt; to store the Docker images.&lt;/p&gt;
+
+&lt;p&gt;&lt;code&gt;#docker stack deploy --compose-file=docker-compose.yaml registry&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;You can find more information about the registry and how to use it on the official &lt;a href=&#34;https://docs.docker.com/registry/&#34;&gt;documentation&lt;/a&gt;.&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>
