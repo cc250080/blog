@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  
+  <url>
+    <loc>http://www.carles.cc/2017/07/aws-china-big-data-and-iot-part-1/</loc>
+    <lastmod>2017-07-18T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/2017/04/ha-private-registry-with-s3-and-nfs/</loc>
+    <lastmod>2017-04-18T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/2017/04/debug-docker-swarm-services/</loc>
+    <lastmod>2017-04-14T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/2017/04/graphical-interfaces-for-docker-swarm/</loc>
+    <lastmod>2017-04-10T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/2017/04/create-docker-swarm-on-centos/</loc>
+    <lastmod>2017-04-07T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/2017/02/first-post/</loc>
+    <lastmod>2017-02-26T00:00:05+08:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/tags/aws/</loc>
+    <lastmod>2017-07-18T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/categories/aws/</loc>
+    <lastmod>2017-07-18T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/tags/big-data/</loc>
+    <lastmod>2017-07-18T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/categories/big-data/</loc>
+    <lastmod>2017-07-18T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/</loc>
+    <lastmod>2017-07-18T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/categories/</loc>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/categories/devops/</loc>
+    <lastmod>2017-04-18T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/tags/docker/</loc>
+    <lastmod>2017-04-18T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/categories/docker/</loc>
+    <lastmod>2017-04-18T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/tags/docker-swarm/</loc>
+    <lastmod>2017-04-18T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/categories/docker-swarm/</loc>
+    <lastmod>2017-04-18T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/tags/gui/</loc>
+    <lastmod>2017-04-10T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/categories/gui/</loc>
+    <lastmod>2017-04-10T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/tags/iot/</loc>
+    <lastmod>2017-07-18T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/categories/iot/</loc>
+    <lastmod>2017-07-18T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/tags/portainer/</loc>
+    <lastmod>2017-04-10T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/categories/portainer/</loc>
+    <lastmod>2017-04-10T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/post/</loc>
+    <lastmod>2017-07-18T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/categories/rancher/</loc>
+    <lastmod>2017-04-10T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/categories/shipyard/</loc>
+    <lastmod>2017-04-10T00:00:00+00:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>http://www.carles.cc/tags/</loc>
+    <priority>0</priority>
+  </url>
+  
+</urlset>
