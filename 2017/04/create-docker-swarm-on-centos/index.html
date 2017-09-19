@@ -1,0 +1,882 @@
+
+
+  
+    
+  
+
+
+  
+
+
+
+
+  
+
+
+  
+
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="generator" content="Hugo 0.18.1">
+    <title>Create Docker Swarm on Centos</title>
+    <meta name="author" content="Carles Cortes Costa">
+    <meta name="keywords" content="Docker, DevOps, Docker Swarm, CI/CD, Docker, DevOps, Jenkins, Linux, Open Source, development, next-gen">
+
+    <link rel="icon" href="http://www.carles.cc/favicon.png">
+    
+
+    
+    <meta name="description" content="The goal of this article is to achieve a clean installation of Docker and Docker Swarm on Centos 7.X, then we will also create our first cluster.
+
+">
+    <meta property="og:description" content="The goal of this article is to achieve a clean installation of Docker and Docker Swarm on Centos 7.X, then we will also create our first cluster.
+
+">
+    <meta property="og:type" content="blog">
+    <meta property="og:title" content="Create Docker Swarm on Centos">
+    <meta property="og:url" content="/2017/04/create-docker-swarm-on-centos/">
+    <meta property="og:site_name" content="Carles IT Blog">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Carles IT Blog">
+    <meta name="twitter:description" content="The goal of this article is to achieve a clean installation of Docker and Docker Swarm on Centos 7.X, then we will also create our first cluster.
+
+">
+    
+    
+
+    
+    
+
+    
+      <meta property="og:image" content="//www.gravatar.com/avatar/598c6e3a97498cb3bba12f06e557c91d?s=640">
+    
+
+    
+      <meta property="og:image" content="//devopscube.com/wp-content/uploads/2015/01/SWARM.png">
+    
+    
+      <meta property="og:image" content="//goto.docker.com/rs/929-FJL-178/images/docker-contributors.png">
+    
+    
+
+    
+
+    
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.4/jquery.fancybox.css" />
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.4/helpers/jquery.fancybox-thumbs.min.css" />
+    
+    
+    <link rel="stylesheet" href="http://www.carles.cc/css/style-gwlo24d2hxipxk8bi1sxik0zhlpn9t7ebcmgp9kubmmcjfzlavuyhvbqumhn.min.css" />
+    
+    
+
+    
+      
+    
+    
+  </head>
+
+  <body>
+    <div id="blog">
+      <header id="header" data-behavior="4">
+  <i id="btn-open-sidebar" class="fa fa-lg fa-bars"></i>
+  <div class="header-title">
+    <a class="header-title-link" href="http://www.carles.cc/">Carles IT Blog</a>
+  </div>
+  
+    
+      <a class="header-right-picture "
+         href="http://www.carles.cc/#about">
+    
+    
+    
+      
+        <img class="header-picture" src="//www.gravatar.com/avatar/598c6e3a97498cb3bba12f06e557c91d?s=90" alt="Author&#39;s picture" />
+      
+    
+    </a>
+  
+</header>
+
+      <nav id="sidebar" data-behavior="4">
+  <div class="sidebar-container">
+    
+      <div class="sidebar-profile">
+        <a href="http://www.carles.cc/#about">
+          <img class="sidebar-profile-picture" src="//www.gravatar.com/avatar/598c6e3a97498cb3bba12f06e557c91d?s=110" alt="Author&#39;s picture" />
+        </a>
+        <h4 class="sidebar-profile-name">Carles Cortes Costa</h4>
+        
+          <h5 class="sidebar-profile-bio">SysAdmin/DevOps/<strong>Nerd</strong></h5>
+        
+      </div>
+    
+    <ul class="sidebar-buttons">
+      
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="http://www.carles.cc/">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-home"></i>
+      
+      <span class="sidebar-button-desc">Home</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="http://www.carles.cc/categories">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-bookmark"></i>
+      
+      <span class="sidebar-button-desc">Categories</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="http://www.carles.cc/tags">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-tags"></i>
+      
+      <span class="sidebar-button-desc">Tags</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="http://www.carles.cc/archives">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-archive"></i>
+      
+      <span class="sidebar-button-desc">Archives</span>
+    </a>
+  </li>
+
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="http://www.carles.cc/#about">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-question"></i>
+      
+      <span class="sidebar-button-desc">About</span>
+    </a>
+  </li>
+
+    </ul>
+    <ul class="sidebar-buttons">
+      
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="https://github.com/cc250080" target="_blank">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-github"></i>
+      
+      <span class="sidebar-button-desc">GitHub</span>
+    </a>
+  </li>
+
+    </ul>
+    <ul class="sidebar-buttons">
+      
+  <li class="sidebar-button">
+    
+      <a class="sidebar-button-link " href="http://www.carles.cc/index.xml">
+    
+      <i class="sidebar-button-icon fa fa-lg fa-rss"></i>
+      
+      <span class="sidebar-button-desc">RSS</span>
+    </a>
+  </li>
+
+    </ul>
+  </div>
+</nav>
+
+      
+  <div class="post-header-cover
+              text-center
+              post-header-cover--partial"
+       style="background-image:url('//goto.docker.com/rs/929-FJL-178/images/docker-contributors.png')"
+       data-behavior="4">
+    
+  </div>
+
+
+      <div id="main" data-behavior="4"
+        class="hasCover
+               hasCoverMetaOut
+               hasCoverCaption">
+        <article class="post" itemscope itemType="http://schema.org/BlogPosting">
+          
+            <span class="post-header-cover-caption caption">The beautiful Docker ecosystem</span>
+          
+          
+            <div class="post-header main-content-wrap text-center">
+  
+    <h1 class="post-title" itemprop="headline">
+      Create Docker Swarm on Centos
+    </h1>
+  
+  <div class="postShorten-meta post-meta">
+  
+    <time itemprop="datePublished" datetime="2017-04-07T00:00:00Z">
+      
+  April 7, 2017
+
+    </time>
+  
+  
+  
+  
+    <span>in</span>
+    
+      <a class="category-link" href="http://www.carles.cc/categories/devops">DevOps</a>, 
+    
+      <a class="category-link" href="http://www.carles.cc/categories/docker">Docker</a>, 
+    
+      <a class="category-link" href="http://www.carles.cc/categories/docker-swarm">Docker Swarm</a>
+    
+  
+
+
+</div>
+
+</div>
+          
+          <div class="post-content markdown" itemprop="articleBody">
+            <div class="main-content-wrap">
+              <p>The goal of this article is to achieve a clean installation of Docker and Docker Swarm on Centos 7.X, then we will also create our first cluster.</p>
+
+<p></p>
+
+<p>To do this we start by installing Docker from the official repositories of Centos, then create a cluster with 2 Master nodes and 1 Worker node as an example and use basic docker swarm commands to check the status of our cluster.</p>
+
+<p>Other articles will follow explaining how to create services, use a local Docker Registry, Docker compose and other related topics.</p>
+
+<h2 id="install-docker-using-the-docker-official-repositories">Install Docker using the Docker Official Repositories</h2>
+
+<p>To do this we can follow the official <a href="https://docs.docker.com/engine/installation/linux/centos/">documentation</a>, but here you have what you need to do:</p>
+
+<ol>
+<li><p>Install <em>yum-utils</em>, which provides the <em>yum-config-manager</em> utility:</p>
+
+<pre><code>$ sudo yum install -y yum-utils
+</code></pre></li>
+
+<li><p>Use yum-config-manager to install the repository:</p>
+
+<pre><code>$ sudo yum-config-manager \
+    --add-repo \
+    https://download.docker.com/linux/centos/docker-ce.repo
+</code></pre></li>
+
+<li><p>Install Docker</p>
+
+<pre><code>$ sudo yum makecache fast
+$ sudo yum install docker-ce
+</code></pre></li>
+</ol>
+
+<p>In order to check the version of docker that we have installed</p>
+
+<pre><code>$ sudo docker version
+Client:
+ Version:      17.03.1-ce
+ API version:  1.27
+ Go version:   go1.7.5
+ Git commit:   c6d412e
+ Built:        Mon Mar 27 17:05:44 2017
+ OS/Arch:      linux/amd64
+
+Server:
+ Version:      17.03.1-ce
+ API version:  1.27 (minimum version 1.12)
+ Go version:   go1.7.5
+ Git commit:   c6d412e
+ Built:        Mon Mar 27 17:05:44 2017
+ OS/Arch:      linux/amd64
+ Experimental: false
+</code></pre>
+
+<p>On production systems is advised by the official documentation to do not always blindly update to the latest version. To list all available versions of docker existing on the repository, you can use the following command:</p>
+
+<pre><code>    $ yum list docker-ce.x86_64  --showduplicates |sort -r
+</code></pre>
+
+<ol>
+<li><p>Enable the Docker Daemon</p>
+
+<pre><code>$ sudo systemctl enable docker
+$ sudo systemctl start docker
+</code></pre></li>
+</ol>
+
+<h2 id="create-the-docker-swarm-cluster">Create the Docker Swarm Cluster</h2>
+
+<h3 id="prerequisites">Prerequisites</h3>
+
+<p>The prerequisites to follow this tutorial are pretty straighforward:</p>
+
+<ul>
+<li>Docker version &gt; 1.12 (Swarm mode was introduced in this version)</li>
+<li>The following ports must be available between members of the Cluster:
+
+<ul>
+<li><strong>TCP port 2377</strong> for cluster management communications</li>
+<li><strong>TCP</strong> and <strong>UDP port 7946</strong> for communication among nodes</li>
+<li><strong>UDP port 4789</strong> for overlay network traffic
+<br /></li>
+</ul></li>
+</ul>
+
+<p>If you are planning on creating an overlay network with encryption (&ndash;opt encrypted), you will also need to ensure <strong>ip protocol 50 (ESP)</strong> traffic is allowed.</p>
+
+<h3 id="create-the-swarm">Create the Swarm</h3>
+
+<p>First we will create a Manager node, this action will give us the comments used to add other nodes to the cluster.</p>
+
+<p>First we SSH into the node we want to use as a Manager:</p>
+
+<pre><code>    $ ssh node1
+</code></pre>
+
+<ol>
+<li>Run the command to initialize the swarm Manager:</li>
+</ol>
+
+<blockquote>
+<p>In our lab the IP of the Node that initizes the Swarm is 172.21.177.34:2377</p>
+</blockquote>
+
+<pre><code>    $ docker swarm init --advertise-addr &lt;MANAGER-IP&gt;
+
+    Swarm initialized: current node (rt7coj28xc3hcgxu84m951w43) is now a manager.
+
+    To add a worker to this swarm, run the following command:
+
+        docker swarm join \
+        --token SWMTKN-1-4dt83pm5az465u6cp6gftcmcwi4s16n0y5qliw526oaix44l74-026n87wpf9tt2d97gcp6uc2ht \
+       172.21.177.34:2377
+
+    To add a manager to this swarm, run 'docker swarm join-token manager' and follow the instructions.
+</code></pre>
+
+<p>The <em>&ndash;advertise-addr</em> flag makes the Manager publish it&rsquo;s address.</p>
+
+<ol>
+<li><p>Add a new Node to Cluster as Worker</p>
+
+<pre><code>$ docker swarm join --token SWMTKN-1-4dt83pm5az465u6cp6gftcmcwi4s16n0y5qliw526oaix44l74-026n87wpf9tt2d97gcp6uc2ht 172.21.177.34:2377
+This node joined a swarm as a worker.
+</code></pre></li>
+
+<li><p>Add a new Node to the Cluster as Manager</p></li>
+</ol>
+
+<blockquote>
+<p>This part of the official documentation is not clearly explained, the following command has to be executed in the server that was used as the master, were we initialized the Cluster, and, it is important to know that one of the Masters will act as a leader, and that the manager nodes share data using <em>Raft</em>, so it is recommended an odd number of Master Nodes for production (3 or 5 minimum)</p>
+</blockquote>
+
+<p><img src="http://www.carles.cc/img/docker-swarm-raft.jpg" alt="Docker Swarm Raft" />
+        $ docker swarm join-token manager
+        To add a manager to this swarm, run the following command:</p>
+
+<pre><code>    docker swarm join \
+    --token     SWMTKN-1-4dt83pm5az465u6cp6gftcmcwi4s16n0y5qliw526oaix44l74-5t75b72i0dyna8p9quga2odzu \
+172.21.177.34:2377
+</code></pre>
+
+<p>We will then execute the resulting command in the second Manager node for our example:</p>
+
+<pre><code>    $ docker swarm join --token SWMTKN-1-4dt83pm5az465u6cp6gftcmcwi4s16n0y5qliw526oaix44l74-5t75b72i0dyna8p9quga2odzu 172.21.177.34:2377
+    This node joined a swarm as a manager.
+</code></pre>
+
+<h3 id="check-the-status-of-the-swarm">Check the status of the Swarm</h3>
+
+<p>We can use the commands <em>docker info</em> and <em>docker node ls</em> to check the status of the Swarm Cluster</p>
+
+<pre><code>    $ docker info
+    ...
+
+
+Swarm: active
+ NodeID: wn6l2pua4mvv6m9s7laez2hc2
+ Is Manager: true
+ ClusterID: lkz7zs8vwr1lf41n2ay4bftgy
+ Managers: 2
+ Nodes: 3
+ Orchestration:
+  Task History Retention Limit: 5
+ Raft:
+  Snapshot Interval: 10000
+  Number of Old Snapshots to Retain: 0
+  Heartbeat Tick: 1
+  Election Tick: 3
+
+  ...
+</code></pre>
+
+<p>-</p>
+
+<pre><code>    $ docker node ls
+
+    ID                           HOSTNAME                                      STATUS  AVAILABILITY  MANAGER STATUS
+    rt7coj28xc3hcgxu84m951w43    node1                                         Ready   Active        Leader
+    tjadwr4itnry5swuuhtytgrjl    node2                                         Ready   Active        
+    wn6l2pua4mvv6m9s7laez2hc2 *  node3                                         Ready   Active        Reachable
+</code></pre>
+              
+            </div>
+          </div>
+          <div id="post-footer" class="post-footer main-content-wrap">
+            
+              
+                
+                
+                  <div class="post-footer-tags">
+                    <span class="text-color-light text-small">TAGGED IN</span><br/>
+                    
+  <a class="tag tag--primary tag--small" href="http://www.carles.cc/tags/docker/">Docker</a>
+
+  <a class="tag tag--primary tag--small" href="http://www.carles.cc/tags/docker-swarm/">Docker Swarm</a>
+
+                  </div>
+                
+              
+            
+            <div class="post-actions-wrap">
+  <nav>
+    <ul class="post-actions post-action-nav">
+      
+        <li class="post-action">
+          
+            <a class="post-action-btn btn btn--default tooltip--top" href="http://www.carles.cc/2017/04/graphical-interfaces-for-docker-swarm/" data-tooltip="Graphical Interfaces for Docker Swarm">
+          
+            <i class="fa fa-angle-left"></i>
+            <span class="hide-xs hide-sm text-small icon-ml">NEXT</span>
+          </a>
+        </li>
+        <li class="post-action">
+          
+            <a class="post-action-btn btn btn--default tooltip--top" href="http://www.carles.cc/2017/02/first-post/" data-tooltip="First Post">
+          
+            <span class="hide-xs hide-sm text-small icon-mr">PREVIOUS</span>
+            <i class="fa fa-angle-right"></i>
+          </a>
+        </li>
+      
+    </ul>
+  </nav>
+  <ul class="post-actions post-action-share">
+    
+      <li class="post-action hide-lg hide-md hide-sm">
+        <a class="post-action-btn btn btn--default btn-open-shareoptions" href="#btn-open-shareoptions">
+          <i class="fa fa-share-alt"></i>
+        </a>
+      </li>
+      <li class="post-action hide-xs">
+        <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fcreate-docker-swarm-on-centos%2f">
+          <i class="fa fa-google-plus"></i>
+        </a>
+      </li>
+      <li class="post-action hide-xs">
+        <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fcreate-docker-swarm-on-centos%2f">
+          <i class="fa fa-facebook-official"></i>
+        </a>
+      </li>
+      <li class="post-action hide-xs">
+        <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fcreate-docker-swarm-on-centos%2f">
+          <i class="fa fa-twitter"></i>
+        </a>
+      </li>
+    
+    
+      <li class="post-action">
+        <a class="post-action-btn btn btn--default" href="#disqus_thread">
+          <i class="fa fa-comment-o"></i>
+        </a>
+      </li>
+    
+    <li class="post-action">
+      
+        <a class="post-action-btn btn btn--default" href="#">
+      
+        <i class="fa fa-list"></i>
+      </a>
+    </li>
+  </ul>
+</div>
+
+
+            
+              
+                <div id="disqus_thread">
+  <noscript>Please enable JavaScript to view the <a href="//disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+              
+            
+          </div>
+        </article>
+        <footer id="footer" class="main-content-wrap">
+  <span class="copyrights">
+    &copy; 2017 Carles Cortes Costa. All Rights Reserved
+  </span>
+</footer>
+
+      </div>
+      <div id="bottom-bar" class="post-bottom-bar" data-behavior="4">
+        <div class="post-actions-wrap">
+  <nav>
+    <ul class="post-actions post-action-nav">
+      
+        <li class="post-action">
+          
+            <a class="post-action-btn btn btn--default tooltip--top" href="http://www.carles.cc/2017/04/graphical-interfaces-for-docker-swarm/" data-tooltip="Graphical Interfaces for Docker Swarm">
+          
+            <i class="fa fa-angle-left"></i>
+            <span class="hide-xs hide-sm text-small icon-ml">NEXT</span>
+          </a>
+        </li>
+        <li class="post-action">
+          
+            <a class="post-action-btn btn btn--default tooltip--top" href="http://www.carles.cc/2017/02/first-post/" data-tooltip="First Post">
+          
+            <span class="hide-xs hide-sm text-small icon-mr">PREVIOUS</span>
+            <i class="fa fa-angle-right"></i>
+          </a>
+        </li>
+      
+    </ul>
+  </nav>
+  <ul class="post-actions post-action-share">
+    
+      <li class="post-action hide-lg hide-md hide-sm">
+        <a class="post-action-btn btn btn--default btn-open-shareoptions" href="#btn-open-shareoptions">
+          <i class="fa fa-share-alt"></i>
+        </a>
+      </li>
+      <li class="post-action hide-xs">
+        <a class="post-action-btn btn btn--default" target="new" href="https://plus.google.com/share?url=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fcreate-docker-swarm-on-centos%2f">
+          <i class="fa fa-google-plus"></i>
+        </a>
+      </li>
+      <li class="post-action hide-xs">
+        <a class="post-action-btn btn btn--default" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fcreate-docker-swarm-on-centos%2f">
+          <i class="fa fa-facebook-official"></i>
+        </a>
+      </li>
+      <li class="post-action hide-xs">
+        <a class="post-action-btn btn btn--default" target="new" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fcreate-docker-swarm-on-centos%2f">
+          <i class="fa fa-twitter"></i>
+        </a>
+      </li>
+    
+    
+      <li class="post-action">
+        <a class="post-action-btn btn btn--default" href="#disqus_thread">
+          <i class="fa fa-comment-o"></i>
+        </a>
+      </li>
+    
+    <li class="post-action">
+      
+        <a class="post-action-btn btn btn--default" href="#">
+      
+        <i class="fa fa-list"></i>
+      </a>
+    </li>
+  </ul>
+</div>
+
+
+      </div>
+      <div id="share-options-bar" class="share-options-bar" data-behavior="4">
+  <ul class="share-options">
+    <li class="share-option">
+      <a class="share-option-btn" target="new" href="https://plus.google.com/share?url=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fcreate-docker-swarm-on-centos%2f">
+        <i class="fa fa-google-plus"></i><span>Share on Google Plus</span>
+      </a>
+    </li>
+    <li class="share-option">
+      <a class="share-option-btn" target="new" href="https://www.facebook.com/sharer/sharer.php?u=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fcreate-docker-swarm-on-centos%2f">
+        <i class="fa fa-facebook-official"></i><span>Share on Facebook</span>
+      </a>
+    </li>
+    <li class="share-option">
+      <a class="share-option-btn" target="new" href="https://twitter.com/intent/tweet?text=http%3a%2f%2fwww.carles.cc%2f2017%2f04%2fcreate-docker-swarm-on-centos%2f">
+        <i class="fa fa-twitter"></i><span>Share on Twitter</span>
+      </a>
+    </li>
+  </ul>
+</div>
+<div id="share-options-mask" class="share-options-mask"></div>
+    </div>
+    
+    <div id="about">
+  <div id="about-card">
+    <div id="about-btn-close">
+      <i class="fa fa-remove"></i>
+    </div>
+    
+      <img id="about-card-picture" src="//www.gravatar.com/avatar/598c6e3a97498cb3bba12f06e557c91d?s=110" alt="Author&#39;s picture" />
+    
+    <h4 id="about-card-name">Carles Cortes Costa</h4>
+    
+      <div id="about-card-bio">SysAdmin/DevOps/<strong>Nerd</strong></div>
+    
+    
+      <div id="about-card-job">
+        <i class="fa fa-briefcase"></i>
+        <br/>
+        MCON Group Associate Director
+      </div>
+    
+    
+      <div id="about-card-location">
+        <i class="fa fa-map-marker"></i>
+        <br/>
+        Beijing
+      </div>
+    
+  </div>
+</div>
+
+    <div id="algolia-search-modal" class="modal-container">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="close-button"><i class="fa fa-close"></i></span>
+      <a href="https://algolia.com" target="_blank" class="searchby-algolia text-color-light link-unstyled">
+        <span class="searchby-algolia-text text-color-light text-small">by</span>
+        <img class="searchby-algolia-logo" src="https://www.algolia.com/static_assets/images/press/downloads/algolia-light.svg">
+      </a>
+      <i class="search-icon fa fa-search"></i>
+      <form id="algolia-search-form">
+        <input type="text" id="algolia-search-input" name="search"
+          class="form-control input--large search-input" placeholder="Search" />
+      </form>
+    </div>
+    <div class="modal-body">
+      <div class="no-result text-color-light text-center">no post found</div>
+      <div class="results">
+        
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="http://www.carles.cc/2017/07/aws-china-big-data-and-iot-part-2/">
+                <h3 class="media-heading">AWS China, Big Data and IoT (PART 2)</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jul 7, 2017
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>Following my previous post, In this post I will try to provide a step by step guide to build a sample solution of an infrastructure for IoT in China.</p>
+
+<p></p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="http://www.carles.cc/2017/07/aws-china-big-data-and-iot-part-1/">
+                <h3 class="media-heading">AWS China, Big Data and IoT (PART 1)</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Jul 7, 2017
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>Apart from Docker and DevOps methodologies, the other big topics that I enjoy the most currently at work are Cloud Architecture and Big Data/IoT.</p>
+
+<p>In this article I would like to describe a little bit the situation of AWS in China, specially what is the current status of Services Available and what is the forecast of improvement that we can hopefully expect for the next months.</p>
+
+<p>I will also try to provide an step by step guide to create an infrastructure made with IoT in mind, where we can achieve an scalable, secure and ServerLess installation using only AWS Services that are currently available in China.</p>
+
+<p></p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="http://www.carles.cc/2017/04/ha-private-registry-with-s3-and-nfs/">
+                <h3 class="media-heading">HA Private Registry with S3 and NFS</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Apr 4, 2017
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>Stateless is used as a solution for everything nowadays: scale, containerize, make fault tolerant&hellip; But it is a reality that not everything can be stateless, even if you store the configurations inside the containers, you need to store static files somewhere, you need databases that are stateful by definition, and not all the tools that you will be using are created to be stateless.
+</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="http://www.carles.cc/2017/04/debug-docker-swarm-services/">
+                <h3 class="media-heading">Debug Docker Swarm Services</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Apr 4, 2017
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>The current stable version of Docker Swarm has an important feature missing, and is the same control over logs available without orchestratrion.
+</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="http://www.carles.cc/2017/04/graphical-interfaces-for-docker-swarm/">
+                <h3 class="media-heading">Graphical Interfaces for Docker Swarm</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Apr 4, 2017
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>In this article I will explore some different options for graphical interfaces to manage a Docker Swarm cluster and I will show how to install Portainer as a Swarm Service.
+</p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="http://www.carles.cc/2017/04/create-docker-swarm-on-centos/">
+                <h3 class="media-heading">Create Docker Swarm on Centos</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Apr 4, 2017
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather"><p>The goal of this article is to achieve a clean installation of Docker and Docker Swarm on Centos 7.X, then we will also create our first cluster.</p>
+
+<p></p></div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+          <div class="media">
+            
+            <div class="media-body">
+              <a class="link-unstyled" href="http://www.carles.cc/2017/02/first-post/">
+                <h3 class="media-heading">First Post</h3>
+              </a>
+              <span class="media-meta">
+                <span class="media-date text-small">
+                  Feb 2, 2017
+                </span>
+              </span>
+              <div class="media-content hide-xs font-merryweather">This is the first post on my new blog www.carles.cc. I will try to use this platform to fix some of the knowledge I generate through my work and hobbies in fields like I.T infrastructure, DevOps, CI/CD, hosting, docker, Raspberry Pi, Software Development and others.</div>
+            </div>
+            <div style="clear:both;"></div>
+            <hr>
+          </div>
+        
+      </div>
+    </div>
+    <div class="modal-footer">
+      <p class="results-count text-medium"
+         data-message-zero="no post found"
+         data-message-one="1 post found"
+         data-message-other="{n} posts found">
+         7 posts found
+      </p>
+    </div>
+  </div>
+</div>
+    
+  
+    
+    <div id="cover" style="background-image:url('http://www.carles.cc/images/cover.jpg');"></div>
+  
+
+
+    
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.8.0/highlight.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.4/jquery.fancybox.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/fancybox/2.1.4/helpers/jquery.fancybox-thumbs.min.js"></script>
+
+
+<script src="http://www.carles.cc/js/script-wl33z0n6ocaypepiqrazthtivfrliqijej4rq8ek8gvrv1awftmgjuv8k4zc.min.js"></script>
+
+<script>
+$(document).ready(function() {
+  hljs.configure({ classPrefix: '', useBR: false });
+  $('pre.code-highlight').each(function(i, block) {
+    var code = "";
+    hljs.highlightAuto(block.innerText).value.split(/\r\n|\r|\n/).forEach(function(line) {
+      code += "<span class=\"line\">" + line + "</span><br>";
+    });
+    if (code.length > 0) {
+      block.innerHTML = code;  
+    }
+  });
+  $('pre > code').each(function(i, block) {
+    $(this).addClass('codeblock');
+    hljs.highlightBlock(block);
+  });
+});
+</script>
+
+  
+    
+      <script>
+        var disqus_config = function () {
+          this.page.url = 'http:\/\/www.carles.cc\/2017\/04\/create-docker-swarm-on-centos\/';
+          
+            this.page.identifier = 'pileus';
+          
+        };
+        (function() {
+          
+          
+          if (window.location.hostname == "localhost") {
+            return;
+          }
+          var d = document, s = d.createElement('script');
+          var disqus_shortname = 'pileus';
+          s.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+
+          s.setAttribute('data-timestamp', +new Date());
+          (d.head || d.body).appendChild(s);
+        })();
+      </script>
+    
+  
+
+
+
+
+
+    
+  </body>
+</html>
+

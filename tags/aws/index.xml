@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Aws on Carles IT Blog</title>
+    <link>http://www.carles.cc/tags/aws/index.xml</link>
+    <description>Recent content in Aws on Carles IT Blog</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <atom:link href="http://www.carles.cc/tags/aws/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>AWS China, Big Data and IoT (PART 2)</title>
+      <link>http://www.carles.cc/2017/07/aws-china-big-data-and-iot-part-2/</link>
+      <pubDate>Wed, 19 Jul 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://www.carles.cc/2017/07/aws-china-big-data-and-iot-part-2/</guid>
+      <description>&lt;p&gt;Following my previous post, In this post I will try to provide a step by step guide to build a sample solution of an infrastructure for IoT in China.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-IoT-Article.png&#34; alt=&#34;Infrastructure Goal&#34; title=&#34;IoT Infrastructure&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;aws-service-overview&#34;&gt;AWS Service Overview&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://aws.amazon.com/iot/&#34;&gt;AWS IoT&lt;/a&gt;  is a managed cloud platform that lets connected devices interact easily and securely with cloud applications and other devices. AWS IoT can process and route billions of messages to AWS endpoints and to other devices reliably and securely.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://aws.amazon.com/s3/&#34;&gt;Amazon S3&lt;/a&gt; is an object storage built to store and retrieve any amount of data from anywhere – web sites and mobile apps, corporate applications, and data from IoT sensors or devices.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://aws.amazon.com/redshift/&#34;&gt;Amazon Redshift&lt;/a&gt; is a fast, fully managed data warehouse that makes it simple and cost-effective to analyze all your data using standard SQL and your existing Business Intelligence (BI) tools. It allows you to run complex analytic queries against petabytes of structured data, using sophisticated query optimization, columnar storage on high-performance local disks, and massively parallel query execution. Most results come back in seconds. With Amazon Redshift, you can start small for just $0.25 per hour with no commitments and scale out to petabytes of data for $1,000 per terabyte per year, less than a tenth the cost of traditional solutions.&lt;/p&gt;
+
+&lt;p&gt;The last component of this architecture will be a Dashboard to analyze the data on &lt;a href=&#34;https://aws.amazon.com/redshift/&#34;&gt;Amazon Redshift&lt;/a&gt; , since my &lt;a href=&#34;https://www.mcon-group.com&#34;&gt;contractor&lt;/a&gt; is a partner of &lt;a href=&#34;http://www.qlik.com/us/&#34;&gt;Qlik&lt;/a&gt; I will use one of the &lt;a href=&#34;http://www.qlik.com/us/&#34;&gt;Qlik&lt;/a&gt; solutions for this sample, but any other of the many BI solutions out there would fit too.&lt;/p&gt;
+
+&lt;p&gt;In this post, to send data to the IoT service, I will use a Python script from the AWS &lt;a href=&#34;https://medium.com/aws-activate-startup-blog/internet-of-beer-introducing-simple-beer-service-63c987037e9e&#34;&gt;Simple Beer Service (SBS)&lt;/a&gt; on a &lt;a href=&#34;https://www.raspberrypi.org/&#34;&gt;raspberry pi&lt;/a&gt;, this script will send sensor outputs such as temperature, humidity, and sound levels in a JSON payload. You can use any existing IoT data source that you may have. The protocol to connect the raspberry and the IoT service will be &lt;a href=&#34;http://mqtt.org/&#34;&gt;MQTT&lt;/a&gt; which has become the industry standard for IoT communication.&lt;/p&gt;
+
+&lt;p&gt;After that, the &lt;a href=&#34;https://aws.amazon.com/iot/&#34;&gt;IoT&lt;/a&gt; Rules engine will be configured to store the stream of data into &lt;a href=&#34;https://aws.amazon.com/s3/&#34;&gt;S3&lt;/a&gt; and this data will be periodically copied into &lt;a href=&#34;https://aws.amazon.com/redshift/&#34;&gt;Redshift&lt;/a&gt;, from there, and using &lt;a href=&#34;https://aws.amazon.com/redshift/&#34;&gt;Redshift&lt;/a&gt; full PostreSQL compatibility, we will configure a BI tool to show us a Dashboard using SQL queries. Simple right?&lt;/p&gt;
+
+&lt;h2 id=&#34;send-sensor-data-to-iot&#34;&gt;Send Sensor Data to IoT&lt;/h2&gt;
+
+&lt;p&gt;In order to succesfully run the Python script, we will need the raspberry to have &lt;a href=&#34;http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html&#34;&gt;access to AWS CLI credentials&lt;/a&gt; and &lt;a href=&#34;https://aws.amazon.com/sdk-for-python/&#34;&gt;boto3&lt;/a&gt; installed.&lt;/p&gt;
+
+&lt;p&gt;Myself I am using a raspberry pi but by no means this is a requirement, you can use your laptop or any computer you want.&lt;/p&gt;
+
+&lt;p&gt;When you have everything ready, download and run the following Python script:&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&#34;https://github.com/awslabs/sbs-iot-data-generator/blob/master/sbs.py&#34;&gt;https://github.com/awslabs/sbs-iot-data-generator/blob/master/sbs.py&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;The script generates random data that looks like the following:&lt;/p&gt;
+
+&lt;pre&gt;&lt;code&gt;{&amp;quot;deviceParameter&amp;quot;: &amp;quot;Temperature&amp;quot;, &amp;quot;deviceValue&amp;quot;: 33, &amp;quot;deviceId&amp;quot;: &amp;quot;SBS01&amp;quot;, &amp;quot;dateTime&amp;quot;: &amp;quot;2017-02-03 11:29:37&amp;quot;}
+{&amp;quot;deviceParameter&amp;quot;: &amp;quot;Sound&amp;quot;, &amp;quot;deviceValue&amp;quot;: 140, &amp;quot;deviceId&amp;quot;: &amp;quot;SBS03&amp;quot;, &amp;quot;dateTime&amp;quot;: &amp;quot;2017-02-03 11:29:38&amp;quot;}
+{&amp;quot;deviceParameter&amp;quot;: &amp;quot;Humidity&amp;quot;, &amp;quot;deviceValue&amp;quot;: 63, &amp;quot;deviceId&amp;quot;: &amp;quot;SBS01&amp;quot;, &amp;quot;dateTime&amp;quot;: &amp;quot;2017-02-03 11:29:39&amp;quot;}
+{&amp;quot;deviceParameter&amp;quot;: &amp;quot;Flow&amp;quot;, &amp;quot;deviceValue&amp;quot;: 80, &amp;quot;deviceId&amp;quot;: &amp;quot;SBS04&amp;quot;, &amp;quot;dateTime&amp;quot;: &amp;quot;2017-02-03 11:29:41&amp;quot;}
+&lt;/code&gt;&lt;/pre&gt;
+
+&lt;p&gt;After a few minutes, the Dashboard of the IoT service should start being populated with Data about the received messages:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-IoT-Dashboard.png&#34; alt=&#34;IoT Dashboard&#34; title=&#34;IoT Dashboard&#34; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;iot-rule-to-store-the-stream-into-s3&#34;&gt;IoT Rule to Store the stream into S3&lt;/h2&gt;
+
+&lt;p&gt;The first thing we need in order to Create a rule from &lt;a href=&#34;https://aws.amazon.com/iot/&#34;&gt;IoT&lt;/a&gt; to &lt;a href=&#34;https://aws.amazon.com/s3/&#34;&gt;S3&lt;/a&gt; is to create an S3 Bucket.&lt;/p&gt;
+
+&lt;h3 id=&#34;create-an-s3-bucket&#34;&gt;Create an S3 Bucket&lt;/h3&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-CreateBucket-1.png&#34; alt=&#34;Create S3 Bucket #1&#34; title=&#34;Create S3 Bucket #1&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-CreateBucket-2.png&#34; alt=&#34;Create S3 Bucket #2&#34; title=&#34;Create S3 Bucket #2&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;On a production installation I would surely create a TAG in this second step, to better control the invoicing.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-CreateBucket-3.png&#34; alt=&#34;Create S3 Bucket #3&#34; title=&#34;Create S3 Bucket #3&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-CreateBucket-4.png&#34; alt=&#34;Create S3 Bucket #4&#34; title=&#34;Create S3 Bucket #4&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;create-the-rule&#34;&gt;Create the Rule&lt;/h3&gt;
+
+&lt;p&gt;Go to &lt;a href=&#34;https://aws.amazon.com/iot/&#34;&gt;IoT&lt;/a&gt;, then Rules, and create new rule.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-IoT-CreateRule-1.png&#34; alt=&#34;AWS IoT Create New Rule&#34; title=&#34;AWS IoT Create New Rule&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The AWS Console will prompt you for the &lt;em&gt;Name&lt;/em&gt; of the rule and a &lt;em&gt;Description&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;Then we will define the Rule Statement with the following Values:&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Attribute&lt;/em&gt; : *
+&lt;em&gt;Topic Filter&lt;/em&gt; : /sbs/devicedata/#&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-IoT-CreateRule-2.png&#34; alt=&#34;AWS IoT Create New Rule #2&#34; title=&#34;AWS IoT Create New Rule #2&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Then Click on &lt;em&gt;&amp;ldquo;Add Action&amp;rdquo;&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-IoT-CreateRule-3.png&#34; alt=&#34;AWS IoT New Rule #3&#34; title=&#34;AWS IoT New Rule #3&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Now Click on &lt;em&gt;&amp;ldquo;Configure Action&amp;rdquo;&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-IoT-CreateRule-4.png&#34; alt=&#34;AWS IoT Create Rule #4&#34; title=&#34;AWS IoT Create Rule #4&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;In this step we had choosen the S3 Bucket we had previously created, and defined a &lt;em&gt;key&lt;/em&gt; for it, the key is the path to where the data is written, the key we used will use the &lt;a href=&#34;http://mqtt.org/&#34;&gt;MQTT&lt;/a&gt; topic while ensuring the files don&amp;rsquo;t get overwritten by using the &lt;em&gt;Timestamp&lt;/em&gt; as it&amp;rsquo;s filename, you can find more information about the &lt;em&gt;key&lt;/em&gt; and other aspects related with &lt;a href=&#34;https://aws.amazon.com/iot/&#34;&gt;IoT&lt;/a&gt; S3 Rules in the following &lt;a href=&#34;http://docs.amazonaws.cn/en_us/iot/latest/developerguide/s3-rule.html&#34;&gt;documentation&lt;/a&gt;. To end this step, we generate a Role to write on the &lt;a href=&#34;https://aws.amazon.com/s3/&#34;&gt;S3&lt;/a&gt; Bucket.&lt;/p&gt;
+
+&lt;p&gt;With this the rule will be already defined and we can click on &lt;em&gt;Create rule&lt;/em&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-IoT-CreateRule-5.png&#34; alt=&#34;AWS IoT Create Rule #5&#34; title=&#34;AWS IoT Create Rule #5&#34; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&#34;check-that-the-rule-is-working&#34;&gt;Check that the rule is Working&lt;/h3&gt;
+
+&lt;p&gt;Depending on the ammount of information that is being sent to the IoT, the first data might take a pair of minutes to appear inside the S3 Bucket.&lt;/p&gt;
+
+&lt;p&gt;You can go to the &lt;a href=&#34;https://aws.amazon.com/s3/&#34;&gt;S3&lt;/a&gt; service, click on the S3 Bucket and you should see something as the following:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-IoT-S3-info.png&#34; alt=&#34;Sensor Data in S3 Bucket &#34; title=&#34;Sensor Data in S3 Bucket &#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;#End of the Part 2&lt;/p&gt;
+
+&lt;p&gt;Until now we have an IoT Device sending data to the AWS IoT Service in JSON format using &lt;a href=&#34;http://mqtt.org/&#34;&gt;MQTT&lt;/a&gt;. This information is then directed to an S3 Bucket for storage.&lt;/p&gt;
+
+&lt;p&gt;In the next article I will descrive how to create an &lt;a href=&#34;https://aws.amazon.com/redshift/&#34;&gt;Amazon Redshift&lt;/a&gt; database and how to configure &lt;a href=&#34;https://aws.amazon.com/s3/&#34;&gt;S3&lt;/a&gt; and &lt;a href=&#34;https://aws.amazon.com/redshift/&#34;&gt;Redshift&lt;/a&gt; to share it&amp;rsquo;s data.&lt;/p&gt;</description>
+    </item>
+    
+    <item>
+      <title>AWS China, Big Data and IoT (PART 1)</title>
+      <link>http://www.carles.cc/2017/07/aws-china-big-data-and-iot-part-1/</link>
+      <pubDate>Tue, 18 Jul 2017 00:00:00 +0000</pubDate>
+      
+      <guid>http://www.carles.cc/2017/07/aws-china-big-data-and-iot-part-1/</guid>
+      <description>&lt;p&gt;Apart from Docker and DevOps methodologies, the other big topics that I enjoy the most currently at work are Cloud Architecture and Big Data/IoT.&lt;/p&gt;
+
+&lt;p&gt;In this article I would like to describe a little bit the situation of AWS in China, specially what is the current status of Services Available and what is the forecast of improvement that we can hopefully expect for the next months.&lt;/p&gt;
+
+&lt;p&gt;I will also try to provide an step by step guide to create an infrastructure made with IoT in mind, where we can achieve an scalable, secure and ServerLess installation using only AWS Services that are currently available in China.&lt;/p&gt;
+
+&lt;p&gt;&lt;/p&gt;
+
+&lt;h2 id=&#34;aws-china-vs-aws-europe&#34;&gt;AWS China VS AWS Europe&lt;/h2&gt;
+
+&lt;p&gt;For this face to face comparison, I will take AWS China North Region, which is currently the only AWS Region available in China, against AWS Europe West Region, Ireland, which is one of the most advanced and up-to-date AWS Regions (Frankfurt is usually a bit behind in terms of Services and Features).&lt;/p&gt;
+
+&lt;p&gt;Let&amp;rsquo;s see a screenshot with the current list of Services:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-Ireland-Region.png&#34; alt=&#34;Lots of Services&#34; title=&#34;Services in Ireland Region&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-China-Region.png&#34; alt=&#34;Not that many...&#34; title=&#34;Services in China Region&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;It is easy to see the big difference in the ammount of services between this 2 regions, if we put our focus in IoT/Big Data/Predictive Modeling, we find very fast some hurting absences like &lt;em&gt;Lambda&lt;/em&gt;, &lt;em&gt;Database Migration Service&lt;/em&gt;, &lt;em&gt;Athena&lt;/em&gt;, &lt;em&gt;Kinesis Firehose&lt;/em&gt;, &lt;em&gt;GreenGrass&lt;/em&gt;, &lt;em&gt;QuickSight&lt;/em&gt; or the whole Artificial Inteligence section.&lt;/p&gt;
+
+&lt;p&gt;This means that we can&amp;rsquo;t create an infrastructure for Big Data or IoT in Amazon AWS China? &lt;strong&gt;Of course not&lt;/strong&gt;, we just need a bit more imagination, and sometimes to put a bit more of glue manually.&lt;/p&gt;
+
+&lt;blockquote&gt;
+&lt;p&gt;NOTE: In general, seems the situation is going to improve soon, AWS is not a friend of releasing Roadmaps with exact dates, but from my conversations with the AWS guys seems that we will have &lt;em&gt;Lambda&lt;/em&gt; next month, &lt;em&gt;GreenGrass&lt;/em&gt; before end of the year, and around Christmas, the new AWS Region in NingXia, this Region is supposed to be in a different level than the current Beijing region, and will start from the begining with 3 Availability Zones and many more services than the actually available in Beijing.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h2 id=&#34;iot-infrastructure&#34;&gt;IoT Infrastructure&lt;/h2&gt;
+
+&lt;p&gt;If we were in another region, I would like to propose a database free, ServerLess S3 based infrastructure, with Firehose and Probably Athena or Quicksight on top of S3.&lt;/p&gt;
+
+&lt;p&gt;But in China we can still propose some cool solutions, like the following one:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&#34;http://www.carles.cc/img/AWS-IoT-Article.png&#34; alt=&#34;IoT Architecture&#34; title=&#34;AWS CN IoT Architecture&#34; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The main goals when designing this architecture were:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;ServerLess (Only the BI Dashboard solution requires a server that has to be administered)&lt;/li&gt;
+&lt;li&gt;Easy to Scale&lt;/li&gt;
+&lt;li&gt;Encrypted at transit and at rest&lt;/li&gt;
+&lt;li&gt;Cheap&lt;/li&gt;
+&lt;li&gt;Easy to manage&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In my opinion we achieved our goals with this infrastructure, I will explain in the next sections of this article why I think so.&lt;/p&gt;
+
+&lt;p&gt;Another good points of this infrastructure are that Redshift with it&amp;rsquo;s PostgreSQL drivers can be easily linked with some of the best BI Dashboard solutions out there, like &lt;a href=&#34;https://www.tableau.com/&#34;&gt;tableau&lt;/a&gt; , &lt;a href=&#34;https://www.qlik.com/us/&#34;&gt;Qlik&lt;/a&gt; or others.&lt;/p&gt;
+
+&lt;p&gt;On top of that (I might detail the integration of this services on a following article) &lt;em&gt;AWS EMR&lt;/em&gt; (Or &lt;em&gt;AWS ML&lt;/em&gt;, or &lt;a href=&#34;https://www.tensorflow.org/&#34;&gt;Tensorflow&lt;/a&gt;) can be easily setup to optimize data models and others like &lt;em&gt;Glacier&lt;/em&gt; can be used for cheap long term backup storage.&lt;/p&gt;
+
+&lt;p&gt;In the next article PART 2 I will go through the step by step implementation.&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>
